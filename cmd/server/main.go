@@ -13,4 +13,5 @@ func main() {
 	if err := r.Run(":8080"); err != nil {
 		log.Fatal(err)
 	}
+	log.Println("Done")
 }

@@ -11,6 +11,11 @@ func NewRouter() *gin.Engine {
 	api := r.Group("/api/v1")
 	{
 		api.GET("/health", handler.HealthCheck)
+
+		users := api.Group("/users")
+		{
+			users.POST("/register", handler.RegisterUser)
+		}
 	}
 
 	return r
