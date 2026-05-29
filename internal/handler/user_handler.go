@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
-	"github.com/teng-lei-tfs/Night-Hawk/internal/model"
+	"github.com/hawk-roy/Night-Hawk/internal/model"
 )
 
 var (

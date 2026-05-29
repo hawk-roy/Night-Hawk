@@ -2,7 +2,7 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/teng-lei-tfs/Night-Hawk/internal/handler"
+	"github.com/hawk-roy/Night-Hawk/internal/handler"
 )
 
 func NewRouter() *gin.Engine {

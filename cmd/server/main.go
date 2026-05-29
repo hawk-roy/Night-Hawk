@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/teng-lei-tfs/Night-Hawk/internal/router"
+	"github.com/hawk-roy/Night-Hawk/internal/router"
 )
 
 func main() {
