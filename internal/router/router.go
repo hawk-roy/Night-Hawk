@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/hawk-roy/Night-Hawk/internal/handler"
+	"github.com/hawk-roy/Night-Hawk/internal/middleware"
 )
 
 func NewRouter() *gin.Engine {
@@ -16,6 +17,12 @@ func NewRouter() *gin.Engine {
 		{
 			users.POST("/register", handler.RegisterUser)
 			users.POST("/login", handler.Login)
+		}
+
+		authGroup := api.Group("")
+		authGroup.Use(middleware.AuthMiddleware())
+		{
+			authGroup.GET("/users/me", handler.Me)
 		}
 	}
 

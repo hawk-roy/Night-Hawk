@@ -111,3 +111,34 @@ func Login(c *gin.Context) {
 		"message": "invalid username or password",
 	})
 }
+
+func Me(c *gin.Context) {
+	userID, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"code":    401,
+			"message": "unauthorized",
+			"data":    nil,
+		})
+		return
+	}
+
+	username, ok := c.Get("username")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"code":    401,
+			"message": "unauthorized",
+			"data":    nil,
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    0,
+		"message": "success",
+		"data": gin.H{
+			"user_id":  userID,
+			"username": username,
+		},
+	})
+}

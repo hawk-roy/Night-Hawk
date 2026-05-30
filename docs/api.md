@@ -166,3 +166,76 @@ curl.exe --% -i -X POST http://localhost:8080/api/v1/users/login -H "Content-Typ
 ```powershell
 curl.exe --% -i -X POST http://localhost:8080/api/v1/users/login -H "Content-Type: application/json" -d "{\"username\":\"testuser\"}"
 ```
+
+## 获取当前用户信息
+
+### 接口说明
+
+获取当前登录用户信息。该接口受 JWT 鉴权中间件保护，请求时必须携带有效 token。
+
+### 请求路径
+
+```text
+GET /api/v1/users/me
+```
+
+### 请求头
+
+```text
+Authorization: Bearer xxxxx.yyyyy.zzzzz
+```
+
+### 成功响应
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "user_id": 1,
+    "username": "testuser"
+  }
+}
+```
+
+### 错误响应
+
+不带 token：
+
+```json
+{
+  "code": 401,
+  "message": "unauthorized",
+  "data": null
+}
+```
+
+错误 token：
+
+```json
+{
+  "code": 401,
+  "message": "unauthorized",
+  "data": null
+}
+```
+
+### curl 验证命令
+
+不带 token：
+
+```powershell
+curl.exe -i http://localhost:8080/api/v1/users/me
+```
+
+错误 token：
+
+```powershell
+curl.exe --% -i http://localhost:8080/api/v1/users/me -H "Authorization: Bearer wrong-token"
+```
+
+正确 token：
+
+```powershell
+curl.exe --% -i http://localhost:8080/api/v1/users/me -H "Authorization: Bearer 这里替换成真实token"
+```
