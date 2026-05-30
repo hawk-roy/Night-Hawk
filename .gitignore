@@ -2,3 +2,4 @@
 *.exe
 *.log
 .env
+.night-hawk-token

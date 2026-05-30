@@ -23,6 +23,24 @@
 go run ./cmd/server
 ```
 
+## 接口测试小工具
+
+启动服务后，可以用项目内置的小工具测试接口，避免手写复杂的 PowerShell curl 命令。
+
+```bash
+go run ./cmd/apitest health
+go run ./cmd/apitest register JulieJaps 112233
+go run ./cmd/apitest login JulieJaps 112233
+go run ./cmd/apitest me
+go run ./cmd/apitest me-wrong
+```
+
+说明：
+
+- `login` 成功后会把 JWT token 保存到 `.night-hawk-token`
+- `.night-hawk-token` 已加入 `.gitignore`，不要提交
+- `me` 会自动读取 `.night-hawk-token` 并访问受保护接口 `/api/v1/users/me`
+
 ## 用户注册接口
 
 接口路径：
