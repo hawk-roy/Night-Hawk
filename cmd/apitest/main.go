@@ -38,6 +38,8 @@ func main() {
 	switch cmd {
 	case "health":
 		err = request(client, http.MethodGet, *baseURL+"/api/v1/health", "", nil, false)
+	case "products":
+		err = request(client, http.MethodGet, *baseURL+"/api/v1/products", "", nil, true)
 	case "register":
 		username, password, parseErr := usernamePassword(args)
 		if parseErr != nil {
@@ -87,6 +89,7 @@ func printUsage() {
 
 Usage:
   go run ./cmd/apitest health
+  go run ./cmd/apitest products
   go run ./cmd/apitest register <username> <password>
   go run ./cmd/apitest login <username> <password>
   go run ./cmd/apitest me
@@ -99,9 +102,11 @@ Options:
   -token-file saved token path, default .night-hawk-token
 
 Example:
-  go run ./cmd/apitest register JulieJaps 112233
-  go run ./cmd/apitest login JulieJaps 112233
-  go run ./cmd/apitest me`)
+	go run ./cmd/apitest health
+	go run ./cmd/apitest products
+	go run ./cmd/apitest register JulieJaps 112233
+	go run ./cmd/apitest login JulieJaps 112233
+	go run ./cmd/apitest me`)
 }
 
 func usernamePassword(args []string) (string, string, error) {

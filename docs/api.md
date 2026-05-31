@@ -239,3 +239,69 @@ curl.exe --% -i http://localhost:8080/api/v1/users/me -H "Authorization: Bearer 
 ```powershell
 curl.exe --% -i http://localhost:8080/api/v1/users/me -H "Authorization: Bearer 这里替换成真实token"
 ```
+
+## 商品列表
+
+### 接口说明
+
+获取商品列表。该接口是公开接口，不需要登录，也不需要携带 JWT token。当前商品数据暂时来自内存，后续可以再接入数据库。
+
+### 请求路径
+
+```text
+GET /api/v1/products
+```
+
+### 请求方式
+
+```text
+GET
+```
+
+### curl 验证命令
+
+```powershell
+curl.exe http://localhost:8080/api/v1/products
+```
+
+### 成功响应示例
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": [
+    {
+      "id": 1,
+      "name": "Go Backend Course",
+      "description": "A practical Go backend course",
+      "price": 19900,
+      "stock": 100
+    },
+    {
+      "id": 2,
+      "name": "API Design Handbook",
+      "description": "A handbook for designing backend APIs",
+      "price": 9900,
+      "stock": 50
+    },
+    {
+      "id": 3,
+      "name": "Cloud Native Starter Kit",
+      "description": "A starter kit for cloud native applications",
+      "price": 29900,
+      "stock": 30
+    }
+  ]
+}
+```
+
+### 字段说明
+
+| 字段 | 说明 |
+| --- | --- |
+| id | 商品 ID |
+| name | 商品名称 |
+| description | 商品描述 |
+| price | 商品价格，单位为分 |
+| stock | 当前库存数量 |

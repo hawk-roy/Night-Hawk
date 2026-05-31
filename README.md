@@ -14,8 +14,10 @@
 - [x] 登录成功返回 JWT token
 - [x] JWT 鉴权中间件
 - [x] 受保护接口 `/api/v1/users/me`
-- [ ] 商品列表接口
+- [x] 商品列表接口 `/api/v1/products`
 - [ ] 创建订单接口
+- [ ] 数据库接入
+- [ ] Redis 缓存
 
 ## 启动方式
 
@@ -29,6 +31,7 @@ go run ./cmd/server
 
 ```bash
 go run ./cmd/apitest health
+go run ./cmd/apitest products
 go run ./cmd/apitest register JulieJaps 112233
 go run ./cmd/apitest login JulieJaps 112233
 go run ./cmd/apitest me
