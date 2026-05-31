@@ -24,6 +24,7 @@ func NewRouter() *gin.Engine {
 		authGroup.Use(middleware.AuthMiddleware())
 		{
 			authGroup.GET("/users/me", handler.Me)
+			authGroup.POST("/orders", handler.CreateOrder)
 		}
 	}
 

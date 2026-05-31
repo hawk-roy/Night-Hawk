@@ -305,3 +305,183 @@ curl.exe http://localhost:8080/api/v1/products
 | description | 商品描述 |
 | price | 商品价格，单位为分 |
 | stock | 当前库存数量 |
+
+## 创建订单
+
+### 接口说明
+
+创建订单接口雏形。该接口受 JWT 鉴权中间件保护，请求时必须携带有效 token。当前订单数据暂时存储在内存中，只做库存校验，不做真实库存扣减。
+
+### 请求路径
+
+```text
+POST /api/v1/orders
+```
+
+### 请求方式
+
+```text
+POST
+```
+
+### 请求头
+
+```text
+Authorization: Bearer token
+```
+
+### 请求体示例
+
+```json
+{
+  "product_id": 1,
+  "quantity": 2
+}
+```
+
+### 成功响应示例
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "id": 1,
+    "user_id": 1,
+    "username": "testuser",
+    "product_id": 1,
+    "product_name": "Go Backend Course",
+    "unit_price": 19900,
+    "quantity": 2,
+    "total_amount": 39800,
+    "status": "PENDING_PAYMENT",
+    "created_at": "2026-05-31T22:07:13.9462216+08:00"
+  }
+}
+```
+
+### 错误响应示例
+
+不带 token：
+
+```json
+{
+  "code": 401,
+  "message": "unauthorized",
+  "data": null
+}
+```
+
+quantity 非法：
+
+```json
+{
+  "code": 400,
+  "message": "quantity must be greater than 0",
+  "data": null
+}
+```
+
+product_id 非法：
+
+```json
+{
+  "code": 400,
+  "message": "product_id must be greater than 0",
+  "data": null
+}
+```
+
+商品不存在：
+
+```json
+{
+  "code": 404,
+  "message": "product not found",
+  "data": null
+}
+```
+
+库存不足：
+
+```json
+{
+  "code": 400,
+  "message": "insufficient stock",
+  "data": null
+}
+```
+
+### curl 验证命令
+
+不带 token：
+
+```powershell
+curl.exe -X POST http://localhost:8080/api/v1/orders `
+  -H "Content-Type: application/json" `
+  -d '{"product_id":1,"quantity":2}'
+```
+
+带正确 token：
+
+```powershell
+curl.exe -X POST http://localhost:8080/api/v1/orders `
+  -H "Content-Type: application/json" `
+  -H "Authorization: Bearer 这里替换成真实token" `
+  -d '{"product_id":1,"quantity":2}'
+```
+
+quantity 非法：
+
+```powershell
+curl.exe -X POST http://localhost:8080/api/v1/orders `
+  -H "Content-Type: application/json" `
+  -H "Authorization: Bearer 这里替换成真实token" `
+  -d '{"product_id":1,"quantity":0}'
+```
+
+product_id 非法：
+
+```powershell
+curl.exe -X POST http://localhost:8080/api/v1/orders `
+  -H "Content-Type: application/json" `
+  -H "Authorization: Bearer 这里替换成真实token" `
+  -d '{"product_id":0,"quantity":1}'
+```
+
+商品不存在：
+
+```powershell
+curl.exe -X POST http://localhost:8080/api/v1/orders `
+  -H "Content-Type: application/json" `
+  -H "Authorization: Bearer 这里替换成真实token" `
+  -d '{"product_id":999,"quantity":1}'
+```
+
+库存不足：
+
+```powershell
+curl.exe -X POST http://localhost:8080/api/v1/orders `
+  -H "Content-Type: application/json" `
+  -H "Authorization: Bearer 这里替换成真实token" `
+  -d '{"product_id":1,"quantity":999999}'
+```
+
+### apitest 验证命令
+
+```powershell
+go run ./cmd/apitest orders
+go run ./cmd/apitest orders 1 2
+```
+
+### 字段说明
+
+| 字段 | 说明 |
+| --- | --- |
+| product_id | 商品 ID |
+| product_name | 商品名称 |
+| unit_price | 下单时商品单价，单位为分 |
+| quantity | 购买数量 |
+| total_amount | 订单总金额，单位为分 |
+| status | 订单状态，当前为 PENDING_PAYMENT |
+| created_at | 订单创建时间 |

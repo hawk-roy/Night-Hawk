@@ -15,9 +15,11 @@
 - [x] JWT 鉴权中间件
 - [x] 受保护接口 `/api/v1/users/me`
 - [x] 商品列表接口 `/api/v1/products`
-- [ ] 创建订单接口
+- [x] 创建订单接口雏形 `/api/v1/orders`
+- [x] JWT 保护订单创建接口
 - [ ] 数据库接入
-- [ ] Redis 缓存
+- [ ] 库存扣减事务
+- [ ] Redis 幂等 key
 
 ## 启动方式
 
@@ -36,6 +38,8 @@ go run ./cmd/apitest register JulieJaps 112233
 go run ./cmd/apitest login JulieJaps 112233
 go run ./cmd/apitest me
 go run ./cmd/apitest me-wrong
+go run ./cmd/apitest orders
+go run ./cmd/apitest orders 1 2
 ```
 
 说明：
@@ -43,6 +47,7 @@ go run ./cmd/apitest me-wrong
 - `login` 成功后会把 JWT token 保存到 `.night-hawk-token`
 - `.night-hawk-token` 已加入 `.gitignore`，不要提交
 - `me` 会自动读取 `.night-hawk-token` 并访问受保护接口 `/api/v1/users/me`
+- `orders` 会自动读取 `.night-hawk-token` 并访问受保护接口 `/api/v1/orders`
 
 ## 用户注册接口
 

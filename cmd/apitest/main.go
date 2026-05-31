@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -66,6 +67,23 @@ func main() {
 			}
 		}
 		err = request(client, http.MethodGet, *baseURL+"/api/v1/users/me", authToken, nil, false)
+	case "orders":
+		authToken := strings.TrimSpace(*token)
+		if authToken == "" {
+			authToken, err = readToken(*tokenFile)
+			if err != nil {
+				break
+			}
+		}
+		productID, quantity, parseErr := orderArgs(args)
+		if parseErr != nil {
+			err = parseErr
+			break
+		}
+		err = requestJSON(client, http.MethodPost, *baseURL+"/api/v1/orders", authToken, map[string]int64{
+			"product_id": productID,
+			"quantity":   quantity,
+		}, true)
 	case "me-wrong":
 		err = request(client, http.MethodGet, *baseURL+"/api/v1/users/me", "wrong-token", nil, false)
 	case "token":
@@ -94,19 +112,22 @@ Usage:
   go run ./cmd/apitest login <username> <password>
   go run ./cmd/apitest me
   go run ./cmd/apitest me-wrong
+  go run ./cmd/apitest orders [product_id quantity]
   go run ./cmd/apitest token
 
 Options:
   -base       API base URL, default http://localhost:8080
-  -token      JWT token override for the me command
+  -token      JWT token override for protected commands
   -token-file saved token path, default .night-hawk-token
 
 Example:
 	go run ./cmd/apitest health
 	go run ./cmd/apitest products
-	go run ./cmd/apitest register JulieJaps 112233
-	go run ./cmd/apitest login JulieJaps 112233
-	go run ./cmd/apitest me`)
+	go run ./cmd/apitest register TopBeauty 200506
+	go run ./cmd/apitest login TopBeauty 200506
+	go run ./cmd/apitest me
+	go run ./cmd/apitest orders
+	go run ./cmd/apitest orders 1 2`)
 }
 
 func usernamePassword(args []string) (string, string, error) {
@@ -115,6 +136,27 @@ func usernamePassword(args []string) (string, string, error) {
 	}
 
 	return args[1], args[2], nil
+}
+
+func orderArgs(args []string) (int64, int64, error) {
+	if len(args) == 1 {
+		return 1, 2, nil
+	}
+	if len(args) != 3 {
+		return 0, 0, fmt.Errorf("usage: %s [product_id quantity]", args[0])
+	}
+
+	productID, err := strconv.ParseInt(args[1], 10, 64)
+	if err != nil {
+		return 0, 0, fmt.Errorf("invalid product_id: %w", err)
+	}
+
+	quantity, err := strconv.ParseInt(args[2], 10, 64)
+	if err != nil {
+		return 0, 0, fmt.Errorf("invalid quantity: %w", err)
+	}
+
+	return productID, quantity, nil
 }
 
 func requestJSON(client *http.Client, method, url, token string, body any, failOnHTTPError bool) error {
