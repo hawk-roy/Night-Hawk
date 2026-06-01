@@ -15,9 +15,10 @@
 - [x] JWT 鉴权中间件
 - [x] 受保护接口 `/api/v1/users/me`
 - [x] 商品列表接口 `/api/v1/products`
-- [x] 创建订单接口雏形 `/api/v1/orders`
+- [x] 订单创建接口雏形 `/api/v1/orders`
 - [x] JWT 保护订单创建接口
-- [ ] 数据库接入
+- [x] 数据库表结构设计
+- [ ] MySQL 接入
 - [ ] 库存扣减事务
 - [ ] Redis 幂等 key
 
