@@ -40,6 +40,30 @@ payments 表示支付流水。
 
 所有金额使用 BIGINT，单位为分，避免小数精度问题。
 
+## 本地初始化方式
+
+当前阶段使用 Docker Compose 启动 MySQL 8.0，并通过 `docs/db/schema.sql` 初始化数据库结构。
+
+启动 MySQL：
+
+```bash
+docker compose up -d mysql
+```
+
+执行 schema：
+
+```powershell
+Get-Content docs/db/schema.sql | docker exec -i go-order-service-mysql mysql -uroot -prootpass
+```
+
+查看表：
+
+```powershell
+docker exec -it go-order-service-mysql mysql -uroot -prootpass -e "USE go_order_service; SHOW TABLES;"
+```
+
+当前只是数据库环境和表结构落地，Go handler 仍使用内存数据。下一步会将 Go 服务接入 MySQL。
+
 ## 后续演进
 
 后续会继续完成：

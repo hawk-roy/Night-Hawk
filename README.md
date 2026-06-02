@@ -18,7 +18,9 @@
 - [x] 订单创建接口雏形 `/api/v1/orders`
 - [x] JWT 保护订单创建接口
 - [x] 数据库表结构设计
-- [ ] MySQL 接入
+- [x] Docker Compose 启动 MySQL
+- [x] schema.sql 初始化数据库
+- [ ] Go 服务接入 MySQL
 - [ ] 库存扣减事务
 - [ ] Redis 幂等 key
 
@@ -26,6 +28,42 @@
 
 ```bash
 go run ./cmd/server
+```
+
+## 本地 MySQL 开发环境
+
+本项目使用 Docker Compose 启动 MySQL 8.0。
+
+### 1. 准备环境变量
+
+```bash
+cp .env.example .env
+```
+
+Windows PowerShell：
+
+```powershell
+Copy-Item .env.example .env
+```
+
+### 2. 启动 MySQL
+
+```bash
+docker compose up -d mysql
+```
+
+### 3. 初始化数据库
+
+Windows PowerShell：
+
+```powershell
+Get-Content docs/db/schema.sql | docker exec -i go-order-service-mysql mysql -uroot -prootpass
+```
+
+### 4. 查看数据表
+
+```powershell
+docker exec -it go-order-service-mysql mysql -uroot -prootpass -e "USE go_order_service; SHOW TABLES;"
 ```
 
 ## 接口测试小工具
