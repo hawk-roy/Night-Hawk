@@ -84,6 +84,8 @@ func main() {
 			"product_id": productID,
 			"quantity":   quantity,
 		}, true)
+	case "db":
+		err = request(client, http.MethodGet, *baseURL+"/api/v1/health/db", "", nil, false)
 	case "me-wrong":
 		err = request(client, http.MethodGet, *baseURL+"/api/v1/users/me", "wrong-token", nil, false)
 	case "token":
@@ -106,14 +108,16 @@ func printUsage() {
 	fmt.Println(`Night-Hawk API test tool
 
 Usage:
-  go run ./cmd/apitest health
-  go run ./cmd/apitest products
-  go run ./cmd/apitest register <username> <password>
-  go run ./cmd/apitest login <username> <password>
-  go run ./cmd/apitest me
-  go run ./cmd/apitest me-wrong
-  go run ./cmd/apitest orders [product_id quantity]
-  go run ./cmd/apitest token
+	go run ./cmd/apitest health
+	go run ./cmd/apitest products
+	go run ./cmd/apitest register <username> <password>
+	go run ./cmd/apitest login <username> <password>
+	go run ./cmd/apitest me
+	go run ./cmd/apitest me-wrong
+	go run ./cmd/apitest orders [product_id quantity]
+	go run ./cmd/apitest token
+	go run ./cmd/apitest db
+
 
 Options:
   -base       API base URL, default http://localhost:8080

@@ -34,11 +34,17 @@ orders 表示业务订单。
 
 payments 表示支付流水。
 
-一个订单可能有多次支付尝试。支付状态和订单状态有关，但不是同一件事。
+一个订单可能有多次支付尝试，支付状态和订单状态有关联，但不是同一件事。
 
 ## 金额字段设计
 
 所有金额使用 BIGINT，单位为分，避免小数精度问题。
+
+## 当前进度
+
+当前 Go 服务已经接入 MySQL，并且可以通过 `/api/v1/health/db` 验证连接状态。
+
+当前业务 handler 仍然使用内存数据，下一步会把用户注册/登录等业务逐步迁移到 MySQL。
 
 ## 本地初始化方式
 
@@ -62,11 +68,7 @@ Get-Content docs/db/schema.sql | docker exec -i go-order-service-mysql mysql -ur
 docker exec -it go-order-service-mysql mysql -uroot -prootpass -e "USE go_order_service; SHOW TABLES;"
 ```
 
-当前只是数据库环境和表结构落地，Go handler 仍使用内存数据。下一步会将 Go 服务接入 MySQL。
-
 ## 后续演进
-
-后续会继续完成：
 
 - Go 项目接入 MySQL
 - 将内存 users/products/orders 迁移到数据库

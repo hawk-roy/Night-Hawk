@@ -23,6 +23,53 @@ GET /api/v1/health
 curl.exe http://localhost:8080/api/v1/health
 ```
 
+## 数据库健康检查
+
+### 接口说明
+
+用于检查 Go 服务与 MySQL 的连接状态。
+
+### 请求路径
+
+```text
+GET /api/v1/health/db
+```
+
+### 请求方式
+
+```text
+GET
+```
+
+### curl 验证命令
+
+```powershell
+curl.exe http://localhost:8080/api/v1/health/db
+```
+
+### 成功响应
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "database": "mysql",
+    "status": "ok"
+  }
+}
+```
+
+### 数据库不可用响应
+
+```json
+{
+  "code": 500,
+  "message": "database unavailable",
+  "data": null
+}
+```
+
 ## 用户注册
 
 ### 请求路径

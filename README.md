@@ -20,7 +20,8 @@
 - [x] 数据库表结构设计
 - [x] Docker Compose 启动 MySQL
 - [x] schema.sql 初始化数据库
-- [ ] Go 服务接入 MySQL
+- [x] Go 服务接入 MySQL
+- [x] 数据库健康检查接口 `/api/v1/health/db`
 - [ ] 库存扣减事务
 - [ ] Redis 幂等 key
 
@@ -66,12 +67,35 @@ Get-Content docs/db/schema.sql | docker exec -i go-order-service-mysql mysql -ur
 docker exec -it go-order-service-mysql mysql -uroot -prootpass -e "USE go_order_service; SHOW TABLES;"
 ```
 
+### 5. 验证 Go 服务连接 MySQL
+```powershell
+go run ./cmd/server
+```
+
+在新终端访问：
+```powershell
+curl.exe http://localhost:8080/api/v1/health/db
+```
+
+成功时应返回：
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "database": "mysql",
+    "status": "ok"
+  }
+}
+```
+
 ## 接口测试小工具
 
 启动服务后，可以用项目内置的小工具测试接口，避免手写复杂的 PowerShell curl 命令。
 
 ```bash
 go run ./cmd/apitest health
+go run ./cmd/apitest db
 go run ./cmd/apitest products
 go run ./cmd/apitest register JulieJaps 112233
 go run ./cmd/apitest login JulieJaps 112233
@@ -87,6 +111,7 @@ go run ./cmd/apitest orders 1 2
 - `.night-hawk-token` 已加入 `.gitignore`，不要提交
 - `me` 会自动读取 `.night-hawk-token` 并访问受保护接口 `/api/v1/users/me`
 - `orders` 会自动读取 `.night-hawk-token` 并访问受保护接口 `/api/v1/orders`
+- `db` 用来验证数据库连接，不需要 JWT token
 
 ## 用户注册接口
 

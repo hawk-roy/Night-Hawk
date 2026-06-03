@@ -1,17 +1,20 @@
 package router
 
 import (
+	"database/sql"
+
 	"github.com/gin-gonic/gin"
 	"github.com/hawk-roy/Night-Hawk/internal/handler"
 	"github.com/hawk-roy/Night-Hawk/internal/middleware"
 )
 
-func NewRouter() *gin.Engine {
+func NewRouter(mysqlDB *sql.DB) *gin.Engine {
 	r := gin.Default()
 
 	api := r.Group("/api/v1")
 	{
 		api.GET("/health", handler.HealthCheck)
+		api.GET("/health/db", handler.DBHealthCheck(mysqlDB))
 		api.GET("/products", handler.ListProducts)
 
 		users := api.Group("/users")
