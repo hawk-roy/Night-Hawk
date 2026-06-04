@@ -20,6 +20,9 @@
 - [x] 数据库表结构设计
 - [x] Docker Compose 启动 MySQL
 - [x] schema.sql 初始化数据库
+- [x] User registration/login migrated to MySQL
+- [x] bcrypt password hash storage
+- [x] User data still logs in after restart
 - [x] Go 服务接入 MySQL
 - [x] 数据库健康检查接口 `/api/v1/health/db`
 - [ ] 库存扣减事务
@@ -143,9 +146,9 @@ curl -X POST http://localhost:8080/api/v1/users/register \
 ```json
 {
   "code": 0,
-  "message": "ok",
+  "message": "success",
   "data": {
-    "user_id": 1,
+    "id": 1,
     "username": "testuser"
   }
 }

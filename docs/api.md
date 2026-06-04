@@ -78,6 +78,12 @@ curl.exe http://localhost:8080/api/v1/health/db
 POST /api/v1/users/register
 ```
 
+### API Description
+
+Registration success writes user info into the MySQL users table, and the password is stored as a bcrypt hash.
+
+
+
 ### 请求体
 
 ```json
@@ -92,9 +98,9 @@ POST /api/v1/users/register
 ```json
 {
   "code": 0,
-  "message": "ok",
+  "message": "success",
   "data": {
-    "user_id": 1,
+    "id": 1,
     "username": "testuser"
   }
 }
@@ -122,6 +128,10 @@ curl.exe --% -X POST http://localhost:8080/api/v1/users/register -H "Content-Typ
 ```text
 POST /api/v1/users/login
 ```
+### API Description
+
+The login endpoint queries users from MySQL and checks the password with bcrypt.
+
 
 ### 请求体
 

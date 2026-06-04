@@ -6,10 +6,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hawk-roy/Night-Hawk/internal/handler"
 	"github.com/hawk-roy/Night-Hawk/internal/middleware"
+	"github.com/hawk-roy/Night-Hawk/internal/repository"
 )
 
 func NewRouter(mysqlDB *sql.DB) *gin.Engine {
 	r := gin.Default()
+
+	userRepo := repository.NewUserRepository(mysqlDB)
 
 	api := r.Group("/api/v1")
 	{
@@ -19,8 +22,8 @@ func NewRouter(mysqlDB *sql.DB) *gin.Engine {
 
 		users := api.Group("/users")
 		{
-			users.POST("/register", handler.RegisterUser)
-			users.POST("/login", handler.Login)
+			users.POST("/register", handler.Register(userRepo))
+			users.POST("/login", handler.Login(userRepo))
 		}
 
 		authGroup := api.Group("")

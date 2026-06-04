@@ -32,9 +32,10 @@ inventory 保存库存信息。
 
 orders 表示业务订单。
 
-payments 表示支付流水。
+Current user registration/login has already been migrated to MySQL, and password_hash is stored with bcrypt instead of plaintext.
 
 一个订单可能有多次支付尝试，支付状态和订单状态有关联，但不是同一件事。
+`users` is now wired to the Go service; registration writes to MySQL and login reads from MySQL with bcrypt verification.
 
 ## 金额字段设计
 
