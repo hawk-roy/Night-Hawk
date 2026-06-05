@@ -301,7 +301,7 @@ curl.exe --% -i http://localhost:8080/api/v1/users/me -H "Authorization: Bearer 
 
 ### 接口说明
 
-获取商品列表。该接口是公开接口，不需要登录，也不需要携带 JWT token。当前商品数据暂时来自内存，后续可以再接入数据库。
+商品列表接口从 MySQL `products` 表查询商品，并通过 `inventory` 表返回库存 `stock`。该接口不需要 JWT token。
 
 ### 请求路径
 

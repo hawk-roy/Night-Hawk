@@ -5,9 +5,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/hawk-roy/Night-Hawk/internal/model"
+	"github.com/hawk-roy/Night-Hawk/internal/repository"
 )
 
-var products = []model.Product{
+var orderProducts = []model.Product{
 	{
 		ID:          1,
 		Name:        "Go Backend Course",
@@ -31,20 +32,32 @@ var products = []model.Product{
 	},
 }
 
-func ListProducts(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"code":    0,
-		"message": "success",
-		"data":    products,
-	})
-}
-
 func GetProductByID(productID int64) (*model.Product, bool) {
-	for i := range products {
-		if products[i].ID == productID {
-			return &products[i], true
+	for i := range orderProducts {
+		if orderProducts[i].ID == productID {
+			return &orderProducts[i], true
 		}
 	}
 
 	return nil, false
+}
+
+func ListProducts(productRepo *repository.ProductRepository) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		products, err := productRepo.ListProducts(c.Request.Context())
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"code":    500,
+				"message": "failed to list products",
+				"data":    nil,
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"code":    0,
+			"message": "success",
+			"data":    products,
+		})
+	}
 }

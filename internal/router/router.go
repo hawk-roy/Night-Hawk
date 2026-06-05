@@ -13,12 +13,13 @@ func NewRouter(mysqlDB *sql.DB) *gin.Engine {
 	r := gin.Default()
 
 	userRepo := repository.NewUserRepository(mysqlDB)
+	productRepo := repository.NewProductRepository(mysqlDB)
 
 	api := r.Group("/api/v1")
 	{
 		api.GET("/health", handler.HealthCheck)
 		api.GET("/health/db", handler.DBHealthCheck(mysqlDB))
-		api.GET("/products", handler.ListProducts)
+		api.GET("/products", handler.ListProducts(productRepo))
 
 		users := api.Group("/users")
 		{

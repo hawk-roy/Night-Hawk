@@ -1,30 +1,33 @@
 # go-order-service
 
+
 一个使用 Go + Gin 实现的电商订单后端服务。
 
 ## 当前进度
 
-- [x] 初始化 Go 项目
+- [x] 初始 Go 项目
 - [x] 接入 Gin
-- [x] 实现健康检查接口 `/api/v1/health`
+- [x] 实现健康检查接口 /api/v1/health
 - [x] 用户注册接口
 - [x] 注册接口参数校验
 - [x] 注册接口错误返回
 - [x] 用户登录接口
 - [x] 登录成功返回 JWT token
 - [x] JWT 鉴权中间件
-- [x] 受保护接口 `/api/v1/users/me`
-- [x] 商品列表接口 `/api/v1/products`
-- [x] 订单创建接口雏形 `/api/v1/orders`
+- [x] 受保护接口 /api/v1/users/me
+- [x] 商品列表接口 /api/v1/products
+- [x] 订单创建接口
 - [x] JWT 保护订单创建接口
 - [x] 数据库表结构设计
 - [x] Docker Compose 启动 MySQL
-- [x] schema.sql 初始化数据库
-- [x] User registration/login migrated to MySQL
-- [x] bcrypt password hash storage
-- [x] User data still logs in after restart
+- [x] schema.sql 初始化
+- [x] 用户注册/登录迁移到 MySQL
+- [x] bcrypt 密码 hash 存储
+- [x] 用户数据服务重启后仍可登录
+- [x] 商品列表迁移到 MySQL
+- [x] 商品 seed.sql 初始化数据
 - [x] Go 服务接入 MySQL
-- [x] 数据库健康检查接口 `/api/v1/health/db`
+- [x] /api/v1/health/db
 - [ ] 库存扣减事务
 - [ ] Redis 幂等 key
 
