@@ -47,5 +47,8 @@ func AuthMiddleware() gin.HandlerFunc {
 		c.Set("username", claims.Username)
 
 		c.Next()
+
+		//收尾工作
+
 	}
 }
