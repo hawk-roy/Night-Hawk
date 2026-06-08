@@ -127,8 +127,8 @@ Options:
 Example:
 	go run ./cmd/apitest health
 	go run ./cmd/apitest products
-	go run ./cmd/apitest register TopBeauty 200506
-	go run ./cmd/apitest login TopBeauty 200506
+	go run ./cmd/apitest register orderuser_0608 123456
+	go run ./cmd/apitest login orderuser_0608 123456
 	go run ./cmd/apitest me
 	go run ./cmd/apitest orders
 	go run ./cmd/apitest orders 1 2`)

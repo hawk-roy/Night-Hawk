@@ -1,14 +1,28 @@
 # API 文档
 
-## 健康检查
+## 通用响应格式
 
-### 请求路径
+项目中的接口通常返回以下结构：
 
-```text
-GET /api/v1/health
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {}
+}
 ```
 
-### 成功响应
+- `code = 0` 表示成功
+- `message` 是提示信息
+- `data` 是业务数据，失败时通常为 `null`
+
+---
+
+## 健康检查
+
+### GET /api/v1/health
+
+#### 成功响应
 
 ```json
 {
@@ -17,37 +31,21 @@ GET /api/v1/health
 }
 ```
 
-### curl 验证命令
+#### curl
 
 ```powershell
 curl.exe http://localhost:8080/api/v1/health
 ```
 
+---
+
 ## 数据库健康检查
 
-### 接口说明
+### GET /api/v1/health/db
 
 用于检查 Go 服务与 MySQL 的连接状态。
 
-### 请求路径
-
-```text
-GET /api/v1/health/db
-```
-
-### 请求方式
-
-```text
-GET
-```
-
-### curl 验证命令
-
-```powershell
-curl.exe http://localhost:8080/api/v1/health/db
-```
-
-### 成功响应
+#### 成功响应
 
 ```json
 {
@@ -60,7 +58,7 @@ curl.exe http://localhost:8080/api/v1/health/db
 }
 ```
 
-### 数据库不可用响应
+#### 数据库不可用响应
 
 ```json
 {
@@ -70,21 +68,19 @@ curl.exe http://localhost:8080/api/v1/health/db
 }
 ```
 
-## 用户注册
+#### curl
 
-### 请求路径
-
-```text
-POST /api/v1/users/register
+```powershell
+curl.exe http://localhost:8080/api/v1/health/db
 ```
 
-### API Description
+---
 
-Registration success writes user info into the MySQL users table, and the password is stored as a bcrypt hash.
+## 用户注册
 
+### POST /api/v1/users/register
 
-
-### 请求体
+#### 请求体
 
 ```json
 {
@@ -93,7 +89,7 @@ Registration success writes user info into the MySQL users table, and the passwo
 }
 ```
 
-### 成功响应
+#### 成功响应
 
 ```json
 {
@@ -106,34 +102,31 @@ Registration success writes user info into the MySQL users table, and the passwo
 }
 ```
 
-### 错误响应
+#### 错误响应
 
 ```json
 {
   "code": 400,
-  "message": "invalid request"
+  "message": "invalid request",
+  "data": null
 }
 ```
 
-### curl 验证命令
+#### curl
 
 ```powershell
-curl.exe --% -X POST http://localhost:8080/api/v1/users/register -H "Content-Type: application/json" -d "{\"username\":\"testuser\",\"password\":\"123456\"}"
+curl.exe -X POST http://localhost:8080/api/v1/users/register `
+  -H "Content-Type: application/json" `
+  -d '{"username":"testuser","password":"123456"}'
 ```
+
+---
 
 ## 用户登录
 
-### 请求路径
+### POST /api/v1/users/login
 
-```text
-POST /api/v1/users/login
-```
-### API Description
-
-The login endpoint queries users from MySQL and checks the password with bcrypt.
-
-
-### 请求体
+#### 请求体
 
 ```json
 {
@@ -142,7 +135,7 @@ The login endpoint queries users from MySQL and checks the password with bcrypt.
 }
 ```
 
-### 成功响应
+#### 成功响应
 
 ```json
 {
@@ -154,95 +147,39 @@ The login endpoint queries users from MySQL and checks the password with bcrypt.
 }
 ```
 
-### 错误响应
-
-缺少 username：
-
-```json
-{
-  "code": 400,
-  "message": "username is required"
-}
-```
-
-缺少 password：
-
-```json
-{
-  "code": 400,
-  "message": "password is required"
-}
-```
-
-用户不存在或密码错误：
+#### 常见错误
 
 ```json
 {
   "code": 401,
-  "message": "invalid username or password"
+  "message": "invalid username or password",
+  "data": null
 }
 ```
 
-token 生成失败：
-
-```json
-{
-  "code": 500,
-  "message": "failed to generate token"
-}
-```
-
-### curl 验证命令
-
-注册用户：
+#### curl
 
 ```powershell
-curl.exe --% -X POST http://localhost:8080/api/v1/users/register -H "Content-Type: application/json" -d "{\"username\":\"testuser\",\"password\":\"123456\"}"
+curl.exe -X POST http://localhost:8080/api/v1/users/login `
+  -H "Content-Type: application/json" `
+  -d '{"username":"testuser","password":"123456"}'
 ```
 
-登录成功：
+登录成功后，`cmd/apitest login` 会把 token 保存到 `.night-hawk-token`。
 
-```powershell
-curl.exe --% -X POST http://localhost:8080/api/v1/users/login -H "Content-Type: application/json" -d "{\"username\":\"testuser\",\"password\":\"123456\"}"
-```
+---
 
-错误密码：
+## 当前用户
 
-```powershell
-curl.exe --% -i -X POST http://localhost:8080/api/v1/users/login -H "Content-Type: application/json" -d "{\"username\":\"testuser\",\"password\":\"wrong\"}"
-```
+### GET /api/v1/users/me
 
-缺少用户名：
-
-```powershell
-curl.exe --% -i -X POST http://localhost:8080/api/v1/users/login -H "Content-Type: application/json" -d "{\"password\":\"123456\"}"
-```
-
-缺少密码：
-
-```powershell
-curl.exe --% -i -X POST http://localhost:8080/api/v1/users/login -H "Content-Type: application/json" -d "{\"username\":\"testuser\"}"
-```
-
-## 获取当前用户信息
-
-### 接口说明
-
-获取当前登录用户信息。该接口受 JWT 鉴权中间件保护，请求时必须携带有效 token。
-
-### 请求路径
-
-```text
-GET /api/v1/users/me
-```
-
-### 请求头
+该接口受 JWT 鉴权保护，请求头需要携带：
 
 ```text
 Authorization: Bearer xxxxx.yyyyy.zzzzz
 ```
 
-### 成功响应
+#### 成功响应
 
 ```json
 {
@@ -255,9 +192,7 @@ Authorization: Bearer xxxxx.yyyyy.zzzzz
 }
 ```
 
-### 错误响应
-
-不带 token：
+#### 未授权响应
 
 ```json
 {
@@ -267,61 +202,21 @@ Authorization: Bearer xxxxx.yyyyy.zzzzz
 }
 ```
 
-错误 token：
-
-```json
-{
-  "code": 401,
-  "message": "unauthorized",
-  "data": null
-}
-```
-
-### curl 验证命令
-
-不带 token：
+#### curl
 
 ```powershell
-curl.exe -i http://localhost:8080/api/v1/users/me
+curl.exe -H "Authorization: Bearer xxxxx.yyyyy.zzzzz" http://localhost:8080/api/v1/users/me
 ```
 
-错误 token：
-
-```powershell
-curl.exe --% -i http://localhost:8080/api/v1/users/me -H "Authorization: Bearer wrong-token"
-```
-
-正确 token：
-
-```powershell
-curl.exe --% -i http://localhost:8080/api/v1/users/me -H "Authorization: Bearer 这里替换成真实token"
-```
+---
 
 ## 商品列表
 
-### 接口说明
+### GET /api/v1/products
 
-商品列表接口从 MySQL `products` 表查询商品，并通过 `inventory` 表返回库存 `stock`。该接口不需要 JWT token。
+该接口直接从 MySQL 的 `products` 和 `inventory` 表查询商品与库存，不需要 JWT。
 
-### 请求路径
-
-```text
-GET /api/v1/products
-```
-
-### 请求方式
-
-```text
-GET
-```
-
-### curl 验证命令
-
-```powershell
-curl.exe http://localhost:8080/api/v1/products
-```
-
-### 成功响应示例
+#### 成功响应
 
 ```json
 {
@@ -334,60 +229,40 @@ curl.exe http://localhost:8080/api/v1/products
       "description": "A practical Go backend course",
       "price": 19900,
       "stock": 100
-    },
-    {
-      "id": 2,
-      "name": "API Design Handbook",
-      "description": "A handbook for designing backend APIs",
-      "price": 9900,
-      "stock": 50
-    },
-    {
-      "id": 3,
-      "name": "Cloud Native Starter Kit",
-      "description": "A starter kit for cloud native applications",
-      "price": 29900,
-      "stock": 30
     }
   ]
 }
 ```
 
-### 字段说明
+#### curl
 
-| 字段 | 说明 |
-| --- | --- |
-| id | 商品 ID |
-| name | 商品名称 |
-| description | 商品描述 |
-| price | 商品价格，单位为分 |
-| stock | 当前库存数量 |
+```powershell
+curl.exe http://localhost:8080/api/v1/products
+```
+
+---
 
 ## 创建订单
 
-### 接口说明
+### POST /api/v1/orders
 
-创建订单接口雏形。该接口受 JWT 鉴权中间件保护，请求时必须携带有效 token。当前订单数据暂时存储在内存中，只做库存校验，不做真实库存扣减。
+创建订单接口需要 JWT 鉴权。接口会在 MySQL 事务中完成：
 
-### 请求路径
+1. 查询商品和库存
+2. 使用 `SELECT ... FOR UPDATE` 锁定库存行
+3. 校验商品状态和库存数量
+4. 扣减 `inventory.stock`
+5. 写入 `orders`
+6. 写入 `order_items`
+7. 提交事务
 
-```text
-POST /api/v1/orders
-```
-
-### 请求方式
-
-```text
-POST
-```
-
-### 请求头
+#### 请求头
 
 ```text
-Authorization: Bearer token
+Authorization: Bearer xxxxx.yyyyy.zzzzz
 ```
 
-### 请求体示例
+#### 请求体
 
 ```json
 {
@@ -396,7 +271,7 @@ Authorization: Bearer token
 }
 ```
 
-### 成功响应示例
+#### 成功响应
 
 ```json
 {
@@ -404,22 +279,21 @@ Authorization: Bearer token
   "message": "success",
   "data": {
     "id": 1,
-    "user_id": 1,
-    "username": "testuser",
+    "order_no": "ORD1780894800552424800",
+    "user_id": 3,
+    "username": "orderuser_0608",
     "product_id": 1,
     "product_name": "Go Backend Course",
     "unit_price": 19900,
     "quantity": 2,
     "total_amount": 39800,
     "status": "PENDING_PAYMENT",
-    "created_at": "2026-05-31T22:07:13.9462216+08:00"
+    "created_at": "2026-06-08T13:00:00.5524248+08:00"
   }
 }
 ```
 
-### 错误响应示例
-
-不带 token：
+#### 错误响应
 
 ```json
 {
@@ -429,8 +303,6 @@ Authorization: Bearer token
 }
 ```
 
-quantity 非法：
-
 ```json
 {
   "code": 400,
@@ -438,8 +310,6 @@ quantity 非法：
   "data": null
 }
 ```
-
-product_id 非法：
 
 ```json
 {
@@ -449,8 +319,6 @@ product_id 非法：
 }
 ```
 
-商品不存在：
-
 ```json
 {
   "code": 404,
@@ -458,8 +326,6 @@ product_id 非法：
   "data": null
 }
 ```
-
-库存不足：
 
 ```json
 {
@@ -469,76 +335,43 @@ product_id 非法：
 }
 ```
 
-### curl 验证命令
-
-不带 token：
+#### curl
 
 ```powershell
 curl.exe -X POST http://localhost:8080/api/v1/orders `
   -H "Content-Type: application/json" `
+  -H "Authorization: Bearer xxxxx.yyyyy.zzzzz" `
   -d '{"product_id":1,"quantity":2}'
 ```
 
-带正确 token：
-
-```powershell
-curl.exe -X POST http://localhost:8080/api/v1/orders `
-  -H "Content-Type: application/json" `
-  -H "Authorization: Bearer 这里替换成真实token" `
-  -d '{"product_id":1,"quantity":2}'
-```
-
-quantity 非法：
-
-```powershell
-curl.exe -X POST http://localhost:8080/api/v1/orders `
-  -H "Content-Type: application/json" `
-  -H "Authorization: Bearer 这里替换成真实token" `
-  -d '{"product_id":1,"quantity":0}'
-```
-
-product_id 非法：
-
-```powershell
-curl.exe -X POST http://localhost:8080/api/v1/orders `
-  -H "Content-Type: application/json" `
-  -H "Authorization: Bearer 这里替换成真实token" `
-  -d '{"product_id":0,"quantity":1}'
-```
-
-商品不存在：
-
-```powershell
-curl.exe -X POST http://localhost:8080/api/v1/orders `
-  -H "Content-Type: application/json" `
-  -H "Authorization: Bearer 这里替换成真实token" `
-  -d '{"product_id":999,"quantity":1}'
-```
-
-库存不足：
-
-```powershell
-curl.exe -X POST http://localhost:8080/api/v1/orders `
-  -H "Content-Type: application/json" `
-  -H "Authorization: Bearer 这里替换成真实token" `
-  -d '{"product_id":1,"quantity":999999}'
-```
-
-### apitest 验证命令
+#### apitest
 
 ```powershell
 go run ./cmd/apitest orders
 go run ./cmd/apitest orders 1 2
 ```
 
-### 字段说明
+#### 字段说明
 
 | 字段 | 说明 |
 | --- | --- |
+| id | 订单 ID |
+| order_no | 订单号 |
+| user_id | 下单用户 ID |
+| username | 下单用户名，仅用于返回展示 |
 | product_id | 商品 ID |
 | product_name | 商品名称 |
-| unit_price | 下单时商品单价，单位为分 |
+| unit_price | 商品单价，单位为分 |
 | quantity | 购买数量 |
 | total_amount | 订单总金额，单位为分 |
-| status | 订单状态，当前为 PENDING_PAYMENT |
+| status | 订单状态，当前固定为 `PENDING_PAYMENT` |
 | created_at | 订单创建时间 |
+
+---
+
+## 请求示例说明
+
+- `cmd/apitest db` 用于检查数据库连接
+- `cmd/apitest products` 用于检查商品列表
+- `cmd/apitest register/login/me` 用于检查用户注册、登录和 JWT 鉴权
+- `cmd/apitest orders` 用于检查订单创建与库存扣减事务

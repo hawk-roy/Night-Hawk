@@ -8,6 +8,7 @@ const (
 
 type Order struct {
 	ID          int64     `json:"id"`
+	OrderNo     string    `json:"order_no"`
 	UserID      int64     `json:"user_id"`
 	Username    string    `json:"username"`
 	ProductID   int64     `json:"product_id"`
