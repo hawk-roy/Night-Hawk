@@ -29,25 +29,20 @@
 - [x] `/api/v1/health/db`
 - [x] 订单创建迁移到 MySQL
 - [x] 库存扣减事务
+- [x] Redis 接入 Docker Compose
+- [x] Go 服务接入 Redis
+- [x] Redis 健康检查接口 `/api/v1/health/redis`
 - [ ] Redis 幂等 key
 
 ## 启动方式
 
-```bash
+```powershell
 go run ./cmd/server
 ```
 
 ## 本地 MySQL 开发环境
 
-本项目使用 Docker Compose 启动 MySQL 8.0。
-
 ### 1. 准备环境变量
-
-```bash
-cp .env.example .env
-```
-
-Windows PowerShell：
 
 ```powershell
 Copy-Item .env.example .env
@@ -60,8 +55,6 @@ docker compose up -d mysql
 ```
 
 ### 3. 初始化数据库
-
-Windows PowerShell：
 
 ```powershell
 Get-Content docs/db/schema.sql | docker exec -i go-order-service-mysql mysql -uroot -prootpass
@@ -77,22 +70,36 @@ docker exec -it go-order-service-mysql mysql -uroot -prootpass -e "USE go_order_
 
 ```powershell
 go run ./cmd/server
-```
-
-另开一个终端执行：
-
-```powershell
 curl.exe http://localhost:8500/api/v1/health/db
 ```
 
-成功时应返回：
+## 启动 Redis
+
+```powershell
+docker compose up -d redis
+docker exec -it go-order-service-redis redis-cli ping
+```
+
+期望返回：
+
+```txt
+PONG
+```
+
+## 验证 Redis 健康检查
+
+```powershell
+curl.exe http://localhost:8500/api/v1/health/redis
+```
+
+期望返回：
 
 ```json
 {
   "code": 0,
   "message": "success",
   "data": {
-    "database": "mysql",
+    "cache": "redis",
     "status": "ok"
   }
 }
@@ -105,6 +112,7 @@ curl.exe http://localhost:8500/api/v1/health/db
 ```powershell
 go run ./cmd/apitest health
 go run ./cmd/apitest db
+go run ./cmd/apitest redis
 go run ./cmd/apitest products
 go run ./cmd/apitest register JulieJaps 112233
 go run ./cmd/apitest login JulieJaps 112233
@@ -120,6 +128,7 @@ go run ./cmd/apitest orders 1 2
 - `me` 会自动读取 `.night-hawk-token` 并访问受保护接口 `/api/v1/users/me`
 - `orders` 会自动读取 `.night-hawk-token` 并访问受保护接口 `/api/v1/orders`
 - `db` 用来验证数据库连接，不需要 JWT token
+- `redis` 用来验证 Redis 连接，不需要 JWT token
 
 ## 订单创建
 

@@ -7,9 +7,10 @@ import (
 	"github.com/hawk-roy/Night-Hawk/internal/handler"
 	"github.com/hawk-roy/Night-Hawk/internal/middleware"
 	"github.com/hawk-roy/Night-Hawk/internal/repository"
+	"github.com/redis/go-redis/v9"
 )
 
-func NewRouter(mysqlDB *sql.DB) *gin.Engine {
+func NewRouter(mysqlDB *sql.DB, redisClient *redis.Client) *gin.Engine {
 	r := gin.Default()
 
 	userRepo := repository.NewUserRepository(mysqlDB)
@@ -20,6 +21,7 @@ func NewRouter(mysqlDB *sql.DB) *gin.Engine {
 	{
 		api.GET("/health", handler.HealthCheck)
 		api.GET("/health/db", handler.DBHealthCheck(mysqlDB))
+		api.GET("/health/redis", handler.RedisHealthCheck(redisClient))
 		api.GET("/products", handler.ListProducts(productRepo))
 
 		users := api.Group("/users")

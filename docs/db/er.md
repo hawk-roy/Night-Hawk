@@ -31,7 +31,8 @@
 ## 当前进度
 
 Go 服务已经接入 MySQL，`/api/v1/health/db` 可用，`products`、`inventory` 已接入商品列表接口 `/api/v1/products`。  
-当前 `POST /api/v1/orders` 也已经迁移到 MySQL，并在事务中完成库存校验、库存扣减、`orders` 写入和 `order_items` 写入。
+当前 `POST /api/v1/orders` 也已经迁移到 MySQL，并在事务中完成库存校验、库存扣减、`orders` 写入和 `order_items` 写入。  
+Redis 已经接入服务启动流程，并提供 `/api/v1/health/redis` 健康检查接口，用于验证 Redis 连接状态。
 
 ## 订单创建流程
 

@@ -1,4 +1,10 @@
 services:
+  redis:
+    image: redis:7
+    container_name: go-order-service-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
   mysql:
     image: mysql:8.0
     container_name: go-order-service-mysql

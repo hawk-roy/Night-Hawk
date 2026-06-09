@@ -76,6 +76,43 @@ curl.exe http://localhost:8500/api/v1/health/db
 
 ---
 
+## Redis 健康检查
+
+### GET /api/v1/health/redis
+
+用于检查 Go 服务与 Redis 的连接状态，不需要 JWT。
+
+#### 成功响应
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "cache": "redis",
+    "status": "ok"
+  }
+}
+```
+
+#### Redis 不可用响应
+
+```json
+{
+  "code": 500,
+  "message": "redis unavailable",
+  "data": null
+}
+```
+
+#### curl
+
+```powershell
+curl.exe http://localhost:8500/api/v1/health/redis
+```
+
+---
+
 ## 用户注册
 
 ### POST /api/v1/users/register
@@ -115,7 +152,7 @@ curl.exe http://localhost:8500/api/v1/health/db
 #### curl
 
 ```powershell
-curl.exe -X POST http://localhost:8500/api/v1/users/register `
+curl.exe -X POST http://localhost:8080/api/v1/users/register `
   -H "Content-Type: application/json" `
   -d '{"username":"testuser","password":"123456"}'
 ```
@@ -160,7 +197,7 @@ curl.exe -X POST http://localhost:8500/api/v1/users/register `
 #### curl
 
 ```powershell
-curl.exe -X POST http://localhost:8500/api/v1/users/login `
+curl.exe -X POST http://localhost:8080/api/v1/users/login `
   -H "Content-Type: application/json" `
   -d '{"username":"testuser","password":"123456"}'
 ```
@@ -205,7 +242,7 @@ Authorization: Bearer xxxxx.yyyyy.zzzzz
 #### curl
 
 ```powershell
-curl.exe -H "Authorization: Bearer xxxxx.yyyyy.zzzzz" http://localhost:8500/api/v1/users/me
+curl.exe -H "Authorization: Bearer xxxxx.yyyyy.zzzzz" http://localhost:8080/api/v1/users/me
 ```
 
 ---
@@ -237,7 +274,7 @@ curl.exe -H "Authorization: Bearer xxxxx.yyyyy.zzzzz" http://localhost:8500/api/
 #### curl
 
 ```powershell
-curl.exe http://localhost:8500/api/v1/products
+curl.exe http://localhost:8080/api/v1/products
 ```
 
 ---
@@ -338,7 +375,7 @@ Authorization: Bearer xxxxx.yyyyy.zzzzz
 #### curl
 
 ```powershell
-curl.exe -X POST http://localhost:8500/api/v1/orders `
+curl.exe -X POST http://localhost:8080/api/v1/orders `
   -H "Content-Type: application/json" `
   -H "Authorization: Bearer xxxxx.yyyyy.zzzzz" `
   -d '{"product_id":1,"quantity":2}'
@@ -372,6 +409,7 @@ go run ./cmd/apitest orders 1 2
 ## 请求示例说明
 
 - `cmd/apitest db` 用于检查数据库连接
+- `cmd/apitest redis` 用于检查 Redis 连接
 - `cmd/apitest products` 用于检查商品列表
 - `cmd/apitest register/login/me` 用于检查用户注册、登录和 JWT 鉴权
 - `cmd/apitest orders` 用于检查订单创建与库存扣减事务

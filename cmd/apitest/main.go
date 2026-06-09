@@ -94,6 +94,8 @@ func main() {
 		if err == nil {
 			fmt.Println(saved)
 		}
+	case "redis":
+		err = request(client, http.MethodGet, *baseURL+"/api/v1/health/redis", "", nil, false)
 	default:
 		err = fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -117,6 +119,7 @@ Usage:
 	go run ./cmd/apitest orders [product_id quantity]
 	go run ./cmd/apitest token
 	go run ./cmd/apitest db
+	go run ./cmd/apitest redis
 
 
 Options:
@@ -131,7 +134,8 @@ Example:
 	go run ./cmd/apitest login orderuser_0608 123456
 	go run ./cmd/apitest me
 	go run ./cmd/apitest orders
-	go run ./cmd/apitest orders 1 2`)
+	go run ./cmd/apitest orders 1 2
+	go run ./cmd/apitest redis`)
 }
 
 func usernamePassword(args []string) (string, string, error) {
