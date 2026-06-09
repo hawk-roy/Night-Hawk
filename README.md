@@ -82,7 +82,7 @@ go run ./cmd/server
 另开一个终端执行：
 
 ```powershell
-curl.exe http://localhost:8080/api/v1/health/db
+curl.exe http://localhost:8500/api/v1/health/db
 ```
 
 成功时应返回：

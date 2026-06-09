@@ -34,7 +34,7 @@
 #### curl
 
 ```powershell
-curl.exe http://localhost:8080/api/v1/health
+curl.exe http://localhost:8500/api/v1/health
 ```
 
 ---
@@ -71,7 +71,7 @@ curl.exe http://localhost:8080/api/v1/health
 #### curl
 
 ```powershell
-curl.exe http://localhost:8080/api/v1/health/db
+curl.exe http://localhost:8500/api/v1/health/db
 ```
 
 ---
@@ -115,7 +115,7 @@ curl.exe http://localhost:8080/api/v1/health/db
 #### curl
 
 ```powershell
-curl.exe -X POST http://localhost:8080/api/v1/users/register `
+curl.exe -X POST http://localhost:8500/api/v1/users/register `
   -H "Content-Type: application/json" `
   -d '{"username":"testuser","password":"123456"}'
 ```
@@ -160,7 +160,7 @@ curl.exe -X POST http://localhost:8080/api/v1/users/register `
 #### curl
 
 ```powershell
-curl.exe -X POST http://localhost:8080/api/v1/users/login `
+curl.exe -X POST http://localhost:8500/api/v1/users/login `
   -H "Content-Type: application/json" `
   -d '{"username":"testuser","password":"123456"}'
 ```
@@ -205,7 +205,7 @@ Authorization: Bearer xxxxx.yyyyy.zzzzz
 #### curl
 
 ```powershell
-curl.exe -H "Authorization: Bearer xxxxx.yyyyy.zzzzz" http://localhost:8080/api/v1/users/me
+curl.exe -H "Authorization: Bearer xxxxx.yyyyy.zzzzz" http://localhost:8500/api/v1/users/me
 ```
 
 ---
@@ -237,7 +237,7 @@ curl.exe -H "Authorization: Bearer xxxxx.yyyyy.zzzzz" http://localhost:8080/api/
 #### curl
 
 ```powershell
-curl.exe http://localhost:8080/api/v1/products
+curl.exe http://localhost:8500/api/v1/products
 ```
 
 ---
@@ -338,7 +338,7 @@ Authorization: Bearer xxxxx.yyyyy.zzzzz
 #### curl
 
 ```powershell
-curl.exe -X POST http://localhost:8080/api/v1/orders `
+curl.exe -X POST http://localhost:8500/api/v1/orders `
   -H "Content-Type: application/json" `
   -H "Authorization: Bearer xxxxx.yyyyy.zzzzz" `
   -d '{"product_id":1,"quantity":2}'

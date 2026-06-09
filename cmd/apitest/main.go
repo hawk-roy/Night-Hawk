@@ -21,7 +21,7 @@ type apiResponse struct {
 }
 
 func main() {
-	baseURL := flag.String("base", "http://localhost:8080", "API base URL")
+	baseURL := flag.String("base", "http://localhost:8500", "API base URL")
 	tokenFile := flag.String("token-file", ".night-hawk-token", "path to saved JWT token")
 	token := flag.String("token", "", "JWT token override")
 	flag.Parse()
@@ -120,7 +120,7 @@ Usage:
 
 
 Options:
-  -base       API base URL, default http://localhost:8080
+  -base       API base URL, default http://localhost:8500
   -token      JWT token override for protected commands
   -token-file saved token path, default .night-hawk-token
 
