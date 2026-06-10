@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hawk-roy/Night-Hawk/internal/cache"
 	"github.com/hawk-roy/Night-Hawk/internal/repository"
 )
 
@@ -13,7 +14,7 @@ type CreateOrderRequest struct {
 	Quantity  int64 `json:"quantity"`
 }
 
-func CreateOrder(orderRepo *repository.OrderRepository) gin.HandlerFunc {
+func CreateOrder(orderRepo *repository.OrderRepository, idem *cache.IdempotencyManager) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userIDValue, ok := c.Get("user_id")
 		if !ok {
@@ -55,6 +56,16 @@ func CreateOrder(orderRepo *repository.OrderRepository) gin.HandlerFunc {
 			return
 		}
 
+		idempotencyKey := c.GetHeader("Idempotency-Key")
+		if idempotencyKey == "" {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"code":    400,
+				"message": "idempotency key is required",
+				"data":    nil,
+			})
+			return
+		}
+
 		var req CreateOrderRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -83,8 +94,29 @@ func CreateOrder(orderRepo *repository.OrderRepository) gin.HandlerFunc {
 			return
 		}
 
+		acquired, err := idem.Acquire(c.Request.Context(), userID, idempotencyKey)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"code":    500,
+				"message": "idempotency service unavailable",
+				"data":    nil,
+			})
+			return
+		}
+
+		if !acquired {
+			c.JSON(http.StatusConflict, gin.H{
+				"code":    409,
+				"message": "duplicate request",
+				"data":    nil,
+			})
+			return
+		}
+
 		order, err := orderRepo.CreateOrder(c.Request.Context(), userID, username, req.ProductID, req.Quantity)
 		if err != nil {
+			_ = idem.Release(c.Request.Context(), userID, idempotencyKey)
+
 			switch {
 			case errors.Is(err, repository.ErrProductNotFound):
 				c.JSON(http.StatusNotFound, gin.H{
@@ -107,6 +139,8 @@ func CreateOrder(orderRepo *repository.OrderRepository) gin.HandlerFunc {
 			}
 			return
 		}
+
+		_ = idem.MarkSuccess(c.Request.Context(), userID, idempotencyKey, order.OrderNo)
 
 		c.JSON(http.StatusOK, gin.H{
 			"code":    0,

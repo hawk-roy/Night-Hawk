@@ -32,7 +32,8 @@
 - [x] Redis 接入 Docker Compose
 - [x] Go 服务接入 Redis
 - [x] Redis 健康检查接口 `/api/v1/health/redis`
-- [ ] Redis 幂等 key
+- [x] Redis 幂等 key
+- [x] 订单创建防重复提交
 
 ## 启动方式
 
@@ -132,10 +133,15 @@ go run ./cmd/apitest orders 1 2
 
 ## 订单创建
 
-订单创建接口已经迁移到 MySQL。
+订单创建接口已经迁移到 MySQL，并接入 Redis 幂等 key。
 
 - 接口会在事务中完成商品校验、库存校验、库存扣减、`orders` 写入和 `order_items` 写入
 - 成功后会返回 `order_no`
 - 当前订单状态固定为 `PENDING_PAYMENT`
+- `POST /api/v1/orders` 必须携带 `Idempotency-Key` header
+- 服务端使用 `userID + Idempotency-Key` 组成 Redis key
+- 第一次请求会创建订单并扣减库存
+- 重复请求会返回 `409 duplicate request`
+- 重复请求不会再次扣减库存，也不会重复写入 `orders` 和 `order_items`
 
 更多接口细节请看 [docs/api.md](docs/api.md)。

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hawk-roy/Night-Hawk/internal/cache"
 	"github.com/hawk-roy/Night-Hawk/internal/handler"
 	"github.com/hawk-roy/Night-Hawk/internal/middleware"
 	"github.com/hawk-roy/Night-Hawk/internal/repository"
@@ -16,6 +17,7 @@ func NewRouter(mysqlDB *sql.DB, redisClient *redis.Client) *gin.Engine {
 	userRepo := repository.NewUserRepository(mysqlDB)
 	productRepo := repository.NewProductRepository(mysqlDB)
 	orderRepo := repository.NewOrderRepository(mysqlDB)
+	idempotencyManager := cache.NewIdempotencyManager(redisClient)
 
 	api := r.Group("/api/v1")
 	{
@@ -34,7 +36,7 @@ func NewRouter(mysqlDB *sql.DB, redisClient *redis.Client) *gin.Engine {
 		authGroup.Use(middleware.AuthMiddleware())
 		{
 			authGroup.GET("/users/me", handler.Me)
-			authGroup.POST("/orders", handler.CreateOrder(orderRepo))
+			authGroup.POST("/orders", handler.CreateOrder(orderRepo, idempotencyManager))
 		}
 	}
 

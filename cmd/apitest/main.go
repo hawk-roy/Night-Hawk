@@ -75,15 +75,71 @@ func main() {
 				break
 			}
 		}
+
 		productID, quantity, parseErr := orderArgs(args)
 		if parseErr != nil {
 			err = parseErr
 			break
 		}
-		err = requestJSON(client, http.MethodPost, *baseURL+"/api/v1/orders", authToken, map[string]int64{
+
+		idempotencyKey := fmt.Sprintf("order-apitest-%d", time.Now().UnixNano())
+		body := map[string]int64{
 			"product_id": productID,
 			"quantity":   quantity,
-		}, true)
+		}
+
+		fmt.Println("1) missing Idempotency-Key")
+		err = requestJSONWithHeaders(
+			client,
+			http.MethodPost,
+			*baseURL+"/api/v1/orders",
+			authToken,
+			nil,
+			body,
+			false,
+		)
+		if err != nil {
+			break
+		}
+
+		fmt.Println("2) missing token")
+		err = requestJSONWithHeaders(
+			client,
+			http.MethodPost,
+			*baseURL+"/api/v1/orders",
+			"",
+			map[string]string{"Idempotency-Key": idempotencyKey + "-no-token"},
+			body,
+			false,
+		)
+		if err != nil {
+			break
+		}
+
+		fmt.Println("3) create order with idempotency key")
+		err = requestJSONWithHeaders(
+			client,
+			http.MethodPost,
+			*baseURL+"/api/v1/orders",
+			authToken,
+			map[string]string{"Idempotency-Key": idempotencyKey},
+			body,
+			false,
+		)
+		if err != nil {
+			break
+		}
+
+		fmt.Println("4) duplicate request with same idempotency key")
+		err = requestJSONWithHeaders(
+			client,
+			http.MethodPost,
+			*baseURL+"/api/v1/orders",
+			authToken,
+			map[string]string{"Idempotency-Key": idempotencyKey},
+			body,
+			false,
+		)
 	case "db":
 		err = request(client, http.MethodGet, *baseURL+"/api/v1/health/db", "", nil, false)
 	case "me-wrong":
@@ -187,6 +243,52 @@ func request(client *http.Client, method, url, token string, body io.Reader, fai
 	}
 	if token != "" {
 		req.Header.Set("Authorization", "Bearer "+token)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("HTTP %d %s\n", resp.StatusCode, http.StatusText(resp.StatusCode))
+	printBody(responseBody)
+
+	if failOnHTTPError && resp.StatusCode >= 400 {
+		return fmt.Errorf("request failed with status %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
+func requestJSONWithHeaders(client *http.Client, method, url, token string, headers map[string]string, body any, failOnHTTPError bool) error {
+	payload, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+
+	return requestWithHeaders(client, method, url, token, headers, bytes.NewReader(payload), failOnHTTPError)
+}
+
+func requestWithHeaders(client *http.Client, method, url, token string, headers map[string]string, body io.Reader, failOnHTTPError bool) error {
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		return err
+	}
+
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+	for k, v := range headers {
+		req.Header.Set(k, v)
 	}
 
 	resp, err := client.Do(req)

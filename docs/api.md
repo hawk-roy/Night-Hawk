@@ -283,7 +283,7 @@ curl.exe http://localhost:8080/api/v1/products
 
 ### POST /api/v1/orders
 
-创建订单接口需要 JWT 鉴权。接口会在 MySQL 事务中完成：
+创建订单接口需要 JWT 鉴权，并且必须携带 `Idempotency-Key`。接口会先使用 Redis 做幂等占位，再在 MySQL 事务中完成：
 
 1. 查询商品和库存
 2. 使用 `SELECT ... FOR UPDATE` 锁定库存行
@@ -297,6 +297,7 @@ curl.exe http://localhost:8080/api/v1/products
 
 ```text
 Authorization: Bearer xxxxx.yyyyy.zzzzz
+Idempotency-Key: <unique-request-key>
 ```
 
 #### 请求体
@@ -343,6 +344,30 @@ Authorization: Bearer xxxxx.yyyyy.zzzzz
 ```json
 {
   "code": 400,
+  "message": "idempotency key is required",
+  "data": null
+}
+```
+
+```json
+{
+  "code": 409,
+  "message": "duplicate request",
+  "data": null
+}
+```
+
+```json
+{
+  "code": 500,
+  "message": "idempotency service unavailable",
+  "data": null
+}
+```
+
+```json
+{
+  "code": 400,
   "message": "quantity must be greater than 0",
   "data": null
 }
@@ -375,9 +400,10 @@ Authorization: Bearer xxxxx.yyyyy.zzzzz
 #### curl
 
 ```powershell
-curl.exe -X POST http://localhost:8080/api/v1/orders `
+curl.exe -X POST http://localhost:8500/api/v1/orders `
   -H "Content-Type: application/json" `
   -H "Authorization: Bearer xxxxx.yyyyy.zzzzz" `
+  -H "Idempotency-Key: order-test-0610-001" `
   -d '{"product_id":1,"quantity":2}'
 ```
 
@@ -412,4 +438,6 @@ go run ./cmd/apitest orders 1 2
 - `cmd/apitest redis` 用于检查 Redis 连接
 - `cmd/apitest products` 用于检查商品列表
 - `cmd/apitest register/login/me` 用于检查用户注册、登录和 JWT 鉴权
-- `cmd/apitest orders` 用于检查订单创建与库存扣减事务
+- `cmd/apitest orders` 用于检查订单创建、Redis 幂等和库存扣减事务
+- `cmd/apitest orders` 会依次验证 400、401、200 和 409
+- `cmd/apitest orders` 每次最多成功创建 1 个订单，重复请求会返回 409

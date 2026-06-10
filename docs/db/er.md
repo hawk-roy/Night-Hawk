@@ -31,21 +31,25 @@
 ## 当前进度
 
 Go 服务已经接入 MySQL，`/api/v1/health/db` 可用，`products`、`inventory` 已接入商品列表接口 `/api/v1/products`。  
-当前 `POST /api/v1/orders` 也已经迁移到 MySQL，并在事务中完成库存校验、库存扣减、`orders` 写入和 `order_items` 写入。  
-Redis 已经接入服务启动流程，并提供 `/api/v1/health/redis` 健康检查接口，用于验证 Redis 连接状态。
+当前 `POST /api/v1/orders` 已经接入 Redis 幂等 key，并在事务中完成库存校验、库存扣减、`orders` 写入和 `order_items` 写入。  
+Redis 已经接入服务启动流程，并提供 `/api/v1/health/redis` 健康检查接口，用于验证 Redis 连接状态。  
+`POST /api/v1/orders` 会先用 `userID + Idempotency-Key` 组成 Redis key，重复请求会返回 `409 duplicate request`，不会重复扣库存。
 
 ## 订单创建流程
 
-`POST /api/v1/orders` 会使用数据库事务：
+`POST /api/v1/orders` 会先处理 Redis 幂等 key，再使用数据库事务：
 
-1. 查询商品和库存
-2. 使用 `SELECT ... FOR UPDATE` 锁定库存行
-3. 校验商品状态
-4. 校验库存是否充足
-5. 扣减 `inventory.stock`
-6. 写入 `orders`
-7. 写入 `order_items`
-8. 提交事务
+1. 读取 `userID + Idempotency-Key`
+2. 使用 Redis `SET NX EX` 创建幂等占位
+3. 查询商品和库存
+4. 使用 `SELECT ... FOR UPDATE` 锁定库存行
+5. 校验商品状态
+6. 校验库存是否充足
+7. 扣减 `inventory.stock`
+8. 写入 `orders`
+9. 写入 `order_items`
+10. 提交事务
+11. 成功后把 Redis key 标记为 `SUCCESS:{order_no}`
 
 ## 本地初始化方式
 
@@ -64,6 +68,6 @@ docker exec -it go-order-service-mysql mysql -uroot -prootpass -e "USE go_order_
 
 ## 后续演进
 
-- `Redis` 幂等 key 还未接入
 - 支付流程还未实现
 - 订单取消、订单列表和订单详情接口还未实现
+- 当前 Redis 幂等 key 只覆盖订单创建，后续可以扩展为完整响应缓存
