@@ -4,7 +4,7 @@
 
 ## 当前进度
 
-- [x] 初始 Go 项目
+- [x] 初始化 Go 项目
 - [x] 接入 Gin
 - [x] 实现健康检查接口 `/api/v1/health`
 - [x] 用户注册接口
@@ -24,16 +24,21 @@
 - [x] bcrypt 密码 hash 存储
 - [x] 用户数据服务重启后仍可登录
 - [x] 商品列表迁移到 MySQL
-- [x] 商品 `seed.sql` 初始化数据
+- [x] `seed.sql` 初始化数据
 - [x] Go 服务接入 MySQL
 - [x] `/api/v1/health/db`
 - [x] 订单创建迁移到 MySQL
 - [x] 库存扣减事务
 - [x] Redis 接入 Docker Compose
 - [x] Go 服务接入 Redis
-- [x] Redis 健康检查接口 `/api/v1/health/redis`
+- [x] Redis 健康检查 `/api/v1/health/redis`
 - [x] Redis 幂等 key
 - [x] 订单创建防重复提交
+- [x] 统一响应结构
+- [x] 统一错误响应
+- [x] 请求日志中间件
+- [x] `X-Request-ID`
+- [ ] 支付状态流转
 
 ## 启动方式
 
@@ -87,28 +92,9 @@ docker exec -it go-order-service-redis redis-cli ping
 PONG
 ```
 
-## 验证 Redis 健康检查
-
-```powershell
-curl.exe http://localhost:8500/api/v1/health/redis
-```
-
-期望返回：
-
-```json
-{
-  "code": 0,
-  "message": "success",
-  "data": {
-    "cache": "redis",
-    "status": "ok"
-  }
-}
-```
-
 ## 接口测试小工具
 
-启动服务后，可以直接用项目内置的小工具验证接口：
+启动服务后，可以直接运行：
 
 ```powershell
 go run ./cmd/apitest health
@@ -123,13 +109,12 @@ go run ./cmd/apitest orders 1 2
 ```
 
 说明：
-
 - `login` 成功后会把 JWT token 保存到 `.night-hawk-token`
 - `.night-hawk-token` 已加入 `.gitignore`，不要提交
 - `me` 会自动读取 `.night-hawk-token` 并访问受保护接口 `/api/v1/users/me`
 - `orders` 会自动读取 `.night-hawk-token` 并访问受保护接口 `/api/v1/orders`
-- `db` 用来验证数据库连接，不需要 JWT token
-- `redis` 用来验证 Redis 连接，不需要 JWT token
+- `db` 用于验证数据库连接，不需要 JWT token
+- `redis` 用于验证 Redis 连接，不需要 JWT token
 
 ## 订单创建
 

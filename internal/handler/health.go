@@ -1,14 +1,13 @@
 package handler
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
+	"github.com/hawk-roy/Night-Hawk/internal/response"
 )
 
 func HealthCheck(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "ok",
+	response.Success(c, gin.H{
 		"service": "go-order-service",
+		"status":  "ok",
 	})
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hawk-roy/Night-Hawk/internal/cache"
 	"github.com/hawk-roy/Night-Hawk/internal/repository"
+	"github.com/hawk-roy/Night-Hawk/internal/response"
 )
 
 type CreateOrderRequest struct {
@@ -18,98 +19,58 @@ func CreateOrder(orderRepo *repository.OrderRepository, idem *cache.IdempotencyM
 	return func(c *gin.Context) {
 		userIDValue, ok := c.Get("user_id")
 		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"code":    401,
-				"message": "unauthorized",
-				"data":    nil,
-			})
+			response.Error(c, http.StatusUnauthorized, http.StatusUnauthorized, "unauthorized")
 			return
 		}
 
 		usernameValue, ok := c.Get("username")
 		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"code":    401,
-				"message": "unauthorized",
-				"data":    nil,
-			})
+			response.Error(c, http.StatusUnauthorized, http.StatusUnauthorized, "unauthorized")
 			return
 		}
 
 		userID, ok := userIDValue.(int64)
 		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"code":    401,
-				"message": "unauthorized",
-				"data":    nil,
-			})
+			response.Error(c, http.StatusUnauthorized, http.StatusUnauthorized, "unauthorized")
 			return
 		}
 
 		username, ok := usernameValue.(string)
 		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"code":    401,
-				"message": "unauthorized",
-				"data":    nil,
-			})
+			response.Error(c, http.StatusUnauthorized, http.StatusUnauthorized, "unauthorized")
 			return
 		}
 
 		idempotencyKey := c.GetHeader("Idempotency-Key")
 		if idempotencyKey == "" {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
-				"message": "idempotency key is required",
-				"data":    nil,
-			})
+			response.Error(c, http.StatusBadRequest, http.StatusBadRequest, "idempotency key is required")
 			return
 		}
 
 		var req CreateOrderRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
-				"message": "invalid request",
-				"data":    nil,
-			})
+			response.Error(c, http.StatusBadRequest, http.StatusBadRequest, "invalid request")
 			return
 		}
 
 		if req.ProductID <= 0 {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
-				"message": "product_id must be greater than 0",
-				"data":    nil,
-			})
+			response.Error(c, http.StatusBadRequest, http.StatusBadRequest, "product_id must be greater than 0")
 			return
 		}
 
 		if req.Quantity <= 0 {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"code":    400,
-				"message": "quantity must be greater than 0",
-				"data":    nil,
-			})
+			response.Error(c, http.StatusBadRequest, http.StatusBadRequest, "quantity must be greater than 0")
 			return
 		}
 
 		acquired, err := idem.Acquire(c.Request.Context(), userID, idempotencyKey)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"code":    500,
-				"message": "idempotency service unavailable",
-				"data":    nil,
-			})
+			response.Error(c, http.StatusInternalServerError, http.StatusInternalServerError, "idempotency service unavailable")
 			return
 		}
 
 		if !acquired {
-			c.JSON(http.StatusConflict, gin.H{
-				"code":    409,
-				"message": "duplicate request",
-				"data":    nil,
-			})
+			response.Error(c, http.StatusConflict, http.StatusConflict, "duplicate request")
 			return
 		}
 
@@ -119,33 +80,17 @@ func CreateOrder(orderRepo *repository.OrderRepository, idem *cache.IdempotencyM
 
 			switch {
 			case errors.Is(err, repository.ErrProductNotFound):
-				c.JSON(http.StatusNotFound, gin.H{
-					"code":    404,
-					"message": "product not found",
-					"data":    nil,
-				})
+				response.Error(c, http.StatusNotFound, http.StatusNotFound, "product not found")
 			case errors.Is(err, repository.ErrInsufficientStock):
-				c.JSON(http.StatusBadRequest, gin.H{
-					"code":    400,
-					"message": "insufficient stock",
-					"data":    nil,
-				})
+				response.Error(c, http.StatusBadRequest, http.StatusBadRequest, "insufficient stock")
 			default:
-				c.JSON(http.StatusInternalServerError, gin.H{
-					"code":    500,
-					"message": "internal server error",
-					"data":    nil,
-				})
+				response.Error(c, http.StatusInternalServerError, http.StatusInternalServerError, "internal server error")
 			}
 			return
 		}
 
 		_ = idem.MarkSuccess(c.Request.Context(), userID, idempotencyKey, order.OrderNo)
 
-		c.JSON(http.StatusOK, gin.H{
-			"code":    0,
-			"message": "success",
-			"data":    order,
-		})
+		response.Success(c, order)
 	}
 }

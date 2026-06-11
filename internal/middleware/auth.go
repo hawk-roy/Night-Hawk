@@ -6,39 +6,28 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/hawk-roy/Night-Hawk/internal/auth"
+	"github.com/hawk-roy/Night-Hawk/internal/response"
 )
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"code":    401,
-				"message": "unauthorized",
-				"data":    nil,
-			})
+			response.Error(c, http.StatusUnauthorized, http.StatusUnauthorized, "unauthorized")
 			c.Abort()
 			return
 		}
 
 		parts := strings.SplitN(authHeader, " ", 2)
 		if len(parts) != 2 || parts[0] != "Bearer" || parts[1] == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"code":    401,
-				"message": "unauthorized",
-				"data":    nil,
-			})
+			response.Error(c, http.StatusUnauthorized, http.StatusUnauthorized, "unauthorized")
 			c.Abort()
 			return
 		}
 
 		claims, err := auth.ParseToken(parts[1])
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"code":    401,
-				"message": "unauthorized",
-				"data":    nil,
-			})
+			response.Error(c, http.StatusUnauthorized, http.StatusUnauthorized, "unauthorized")
 			c.Abort()
 			return
 		}

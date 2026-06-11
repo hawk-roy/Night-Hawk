@@ -2,7 +2,7 @@
 
 ## 通用响应格式
 
-项目中的接口通常返回以下结构：
+项目内的核心接口统一返回以下结构：
 
 ```json
 {
@@ -15,6 +15,22 @@
 - `code = 0` 表示成功
 - `message` 是提示信息
 - `data` 是业务数据，失败时通常为 `null`
+- 当前实现里，常见错误码会直接沿用 HTTP 状态码语义，例如 `400 / 401 / 404 / 409 / 500`
+
+## 通用响应头
+
+### `X-Request-ID`
+
+- 客户端可以传入 `X-Request-ID`
+- 如果客户端没有传，服务端会生成一个
+- 服务端会把同一个 `X-Request-ID` 写回响应头
+- 请求日志会打印同一个 `request_id`
+
+示例：
+
+```text
+X-Request-ID: test-request-0611-001
+```
 
 ---
 
@@ -26,8 +42,12 @@
 
 ```json
 {
-  "service": "go-order-service",
-  "status": "ok"
+  "code": 0,
+  "message": "success",
+  "data": {
+    "service": "go-order-service",
+    "status": "ok"
+  }
 }
 ```
 
@@ -80,7 +100,7 @@ curl.exe http://localhost:8500/api/v1/health/db
 
 ### GET /api/v1/health/redis
 
-用于检查 Go 服务与 Redis 的连接状态，不需要 JWT。
+用于检查 Go 服务与 Redis 的连接状态。
 
 #### 成功响应
 
@@ -149,10 +169,26 @@ curl.exe http://localhost:8500/api/v1/health/redis
 }
 ```
 
+```json
+{
+  "code": 400,
+  "message": "username is required",
+  "data": null
+}
+```
+
+```json
+{
+  "code": 400,
+  "message": "password is required",
+  "data": null
+}
+```
+
 #### curl
 
 ```powershell
-curl.exe -X POST http://localhost:8080/api/v1/users/register `
+curl.exe -X POST http://localhost:8500/api/v1/users/register `
   -H "Content-Type: application/json" `
   -d '{"username":"testuser","password":"123456"}'
 ```
@@ -188,6 +224,14 @@ curl.exe -X POST http://localhost:8080/api/v1/users/register `
 
 ```json
 {
+  "code": 400,
+  "message": "invalid request",
+  "data": null
+}
+```
+
+```json
+{
   "code": 401,
   "message": "invalid username or password",
   "data": null
@@ -197,7 +241,7 @@ curl.exe -X POST http://localhost:8080/api/v1/users/register `
 #### curl
 
 ```powershell
-curl.exe -X POST http://localhost:8080/api/v1/users/login `
+curl.exe -X POST http://localhost:8500/api/v1/users/login `
   -H "Content-Type: application/json" `
   -d '{"username":"testuser","password":"123456"}'
 ```
@@ -242,7 +286,7 @@ Authorization: Bearer xxxxx.yyyyy.zzzzz
 #### curl
 
 ```powershell
-curl.exe -H "Authorization: Bearer xxxxx.yyyyy.zzzzz" http://localhost:8080/api/v1/users/me
+curl.exe -H "Authorization: Bearer xxxxx.yyyyy.zzzzz" http://localhost:8500/api/v1/users/me
 ```
 
 ---
@@ -251,7 +295,7 @@ curl.exe -H "Authorization: Bearer xxxxx.yyyyy.zzzzz" http://localhost:8080/api/
 
 ### GET /api/v1/products
 
-该接口直接从 MySQL 的 `products` 和 `inventory` 表查询商品与库存，不需要 JWT。
+直接从 MySQL 的 `products` 和 `inventory` 查询商品与库存，不需要 JWT。
 
 #### 成功响应
 
@@ -274,7 +318,7 @@ curl.exe -H "Authorization: Bearer xxxxx.yyyyy.zzzzz" http://localhost:8080/api/
 #### curl
 
 ```powershell
-curl.exe http://localhost:8080/api/v1/products
+curl.exe http://localhost:8500/api/v1/products
 ```
 
 ---
@@ -283,9 +327,11 @@ curl.exe http://localhost:8080/api/v1/products
 
 ### POST /api/v1/orders
 
-创建订单接口需要 JWT 鉴权，并且必须携带 `Idempotency-Key`。接口会先使用 Redis 做幂等占位，再在 MySQL 事务中完成：
+创建订单接口需要 JWT 鉴权，并且必须携带 `Idempotency-Key`。
 
-1. 查询商品和库存
+处理流程：
+
+1. 查询商品与库存
 2. 使用 `SELECT ... FOR UPDATE` 锁定库存行
 3. 校验商品状态和库存数量
 4. 扣减 `inventory.stock`
@@ -331,7 +377,7 @@ Idempotency-Key: <unique-request-key>
 }
 ```
 
-#### 错误响应
+#### 常见错误
 
 ```json
 {
@@ -427,7 +473,7 @@ go run ./cmd/apitest orders 1 2
 | unit_price | 商品单价，单位为分 |
 | quantity | 购买数量 |
 | total_amount | 订单总金额，单位为分 |
-| status | 订单状态，当前固定为 `PENDING_PAYMENT` |
+| status | 订单状态，目前固定为 `PENDING_PAYMENT` |
 | created_at | 订单创建时间 |
 
 ---
@@ -439,5 +485,20 @@ go run ./cmd/apitest orders 1 2
 - `cmd/apitest products` 用于检查商品列表
 - `cmd/apitest register/login/me` 用于检查用户注册、登录和 JWT 鉴权
 - `cmd/apitest orders` 用于检查订单创建、Redis 幂等和库存扣减事务
-- `cmd/apitest orders` 会依次验证 400、401、200 和 409
-- `cmd/apitest orders` 每次最多成功创建 1 个订单，重复请求会返回 409
+- `cmd/apitest orders` 会依次验证 `400 / 401 / 200 / 409`
+- `cmd/apitest orders` 每次最多成功创建 1 个订单，重复请求会返回 `409`
+
+---
+
+## 请求日志
+
+服务端已经接入请求日志中间件，会记录：
+
+- `request_id`
+- `method`
+- `path`
+- `status`
+- `latency`
+- `client_ip`
+
+如果请求头没有传 `X-Request-ID`，服务端会生成一个并写回响应头。

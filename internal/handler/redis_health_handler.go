@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hawk-roy/Night-Hawk/internal/response"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -15,21 +16,14 @@ func RedisHealthCheck(redisClient *redis.Client) gin.HandlerFunc {
 		defer cancel()
 
 		if err := redisClient.Ping(ctx).Err(); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"code":    500,
-				"message": "redis unavailable",
-				"data":    nil,
-			})
+			response.Error(c, http.StatusInternalServerError, http.StatusInternalServerError, "redis unavailable")
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"code":    0,
-			"message": "success",
-			"data": gin.H{
-				"cache":  "redis",
-				"status": "ok",
-			},
+		response.Success(c, gin.H{
+			"cache":  "redis",
+			"status": "ok",
 		})
+
 	}
 }

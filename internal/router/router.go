@@ -12,7 +12,9 @@ import (
 )
 
 func NewRouter(mysqlDB *sql.DB, redisClient *redis.Client) *gin.Engine {
-	r := gin.Default()
+	r := gin.New()
+	r.Use(gin.Recovery())
+	r.Use(middleware.RequestLogger())
 
 	userRepo := repository.NewUserRepository(mysqlDB)
 	productRepo := repository.NewProductRepository(mysqlDB)
