@@ -20,6 +20,7 @@ func NewRouter(mysqlDB *sql.DB, redisClient *redis.Client) *gin.Engine {
 	productRepo := repository.NewProductRepository(mysqlDB)
 	orderRepo := repository.NewOrderRepository(mysqlDB)
 	idempotencyManager := cache.NewIdempotencyManager(redisClient)
+	paymentRepo := repository.NewPaymentRepository(mysqlDB)
 
 	api := r.Group("/api/v1")
 	{
@@ -39,6 +40,7 @@ func NewRouter(mysqlDB *sql.DB, redisClient *redis.Client) *gin.Engine {
 		{
 			authGroup.GET("/users/me", handler.Me)
 			authGroup.POST("/orders", handler.CreateOrder(orderRepo, idempotencyManager))
+			authGroup.POST("/payments/mock", handler.MockPayOrder(paymentRepo))
 		}
 	}
 

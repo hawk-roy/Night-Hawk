@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/hawk-roy/Night-Hawk/internal/model"
 )
 
 type apiResponse struct {
@@ -152,6 +154,8 @@ func main() {
 		}
 	case "redis":
 		err = request(client, http.MethodGet, *baseURL+"/api/v1/health/redis", "", nil, false)
+	case "payments":
+		err = payments(client, *baseURL, *tokenFile, *token, args)
 	default:
 		err = fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -173,6 +177,7 @@ Usage:
 	go run ./cmd/apitest me
 	go run ./cmd/apitest me-wrong
 	go run ./cmd/apitest orders [product_id quantity]
+	go run ./cmd/apitest payments [product_id quantity]
 	go run ./cmd/apitest token
 	go run ./cmd/apitest db
 	go run ./cmd/apitest redis
@@ -191,6 +196,8 @@ Example:
 	go run ./cmd/apitest me
 	go run ./cmd/apitest orders
 	go run ./cmd/apitest orders 1 2
+	go run ./cmd/apitest payments
+	go run ./cmd/apitest payments 1 2
 	go run ./cmd/apitest redis`)
 }
 
@@ -307,6 +314,185 @@ func requestWithHeaders(client *http.Client, method, url, token string, headers 
 
 	if failOnHTTPError && resp.StatusCode >= 400 {
 		return fmt.Errorf("request failed with status %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
+func requestJSONCapture(client *http.Client, method, url, token string, headers map[string]string, body any) (int, []byte, error) {
+	payload, err := json.Marshal(body)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return doRequest(client, method, url, token, headers, bytes.NewReader(payload))
+}
+
+func doRequest(client *http.Client, method, url, token string, headers map[string]string, body io.Reader) (int, []byte, error) {
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return 0, nil, err
+	}
+	defer resp.Body.Close()
+
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return resp.StatusCode, responseBody, nil
+}
+
+func printResponse(statusCode int, body []byte) {
+	fmt.Printf("HTTP %d %s\n", statusCode, http.StatusText(statusCode))
+	printBody(body)
+}
+
+func decodeResponseData(body []byte, target any) error {
+	var parsed apiResponse
+	if err := json.Unmarshal(body, &parsed); err != nil {
+		return err
+	}
+	if len(parsed.Data) == 0 {
+		return errors.New("response data is empty")
+	}
+	return json.Unmarshal(parsed.Data, target)
+}
+
+func payments(client *http.Client, baseURL, tokenFile, token string, args []string) error {
+	authToken := strings.TrimSpace(token)
+	if authToken == "" {
+		username := fmt.Sprintf("payuser_%d", time.Now().UnixNano())
+		password := "123456"
+
+		fmt.Printf("1) register %s\n", username)
+		statusCode, body, err := requestJSONCapture(client, http.MethodPost, baseURL+"/api/v1/users/register", "", nil, map[string]string{
+			"username": username,
+			"password": password,
+		})
+		if err != nil {
+			return err
+		}
+		printResponse(statusCode, body)
+		if statusCode >= http.StatusBadRequest {
+			return fmt.Errorf("register failed with status %d", statusCode)
+		}
+
+		fmt.Println("2) login and get token")
+		if err := login(client, baseURL, tokenFile, username, password); err != nil {
+			return err
+		}
+
+		authToken, err = readToken(tokenFile)
+		if err != nil {
+			return err
+		}
+	}
+
+	productID, quantity, parseErr := orderArgs(args)
+	if parseErr != nil {
+		return parseErr
+	}
+
+	createOrderBody := map[string]int64{
+		"product_id": productID,
+		"quantity":   quantity,
+	}
+
+	var orderResp struct {
+		ID int64 `json:"id"`
+	}
+
+	fmt.Println("3) create order for SUCCESS payment")
+	successKey := fmt.Sprintf("payment-success-%d", time.Now().UnixNano())
+	statusCode, body, err := requestJSONCapture(client, http.MethodPost, baseURL+"/api/v1/orders", authToken, map[string]string{
+		"Idempotency-Key": successKey,
+	}, createOrderBody)
+	if err != nil {
+		return err
+	}
+	printResponse(statusCode, body)
+	if statusCode >= http.StatusBadRequest {
+		return fmt.Errorf("create order failed with status %d", statusCode)
+	}
+	if err := decodeResponseData(body, &orderResp); err != nil {
+		return err
+	}
+	if orderResp.ID <= 0 {
+		return errors.New("create order response does not contain a valid id")
+	}
+
+	fmt.Println("4) mock payment SUCCESS")
+	statusCode, body, err = requestJSONCapture(client, http.MethodPost, baseURL+"/api/v1/payments/mock", authToken, nil, map[string]any{
+		"order_id": orderResp.ID,
+		"result":   model.PaymentStatusSuccess,
+	})
+	if err != nil {
+		return err
+	}
+	printResponse(statusCode, body)
+	if statusCode >= http.StatusBadRequest {
+		return fmt.Errorf("mock payment success failed with status %d", statusCode)
+	}
+
+	fmt.Println("5) repeat payment on same order")
+	statusCode, body, err = requestJSONCapture(client, http.MethodPost, baseURL+"/api/v1/payments/mock", authToken, nil, map[string]any{
+		"order_id": orderResp.ID,
+		"result":   model.PaymentStatusSuccess,
+	})
+	if err != nil {
+		return err
+	}
+	printResponse(statusCode, body)
+	if statusCode != http.StatusConflict {
+		return fmt.Errorf("expected 409 for duplicate payment, got %d", statusCode)
+	}
+
+	fmt.Println("6) create order for FAILED payment")
+	failedKey := fmt.Sprintf("payment-failed-%d", time.Now().UnixNano())
+	statusCode, body, err = requestJSONCapture(client, http.MethodPost, baseURL+"/api/v1/orders", authToken, map[string]string{
+		"Idempotency-Key": failedKey,
+	}, createOrderBody)
+	if err != nil {
+		return err
+	}
+	printResponse(statusCode, body)
+	if statusCode >= http.StatusBadRequest {
+		return fmt.Errorf("create failed order failed with status %d", statusCode)
+	}
+	if err := decodeResponseData(body, &orderResp); err != nil {
+		return err
+	}
+	if orderResp.ID <= 0 {
+		return errors.New("failed order response does not contain a valid id")
+	}
+
+	fmt.Println("7) mock payment FAILED")
+	statusCode, body, err = requestJSONCapture(client, http.MethodPost, baseURL+"/api/v1/payments/mock", authToken, nil, map[string]any{
+		"order_id": orderResp.ID,
+		"result":   model.PaymentStatusFailed,
+	})
+	if err != nil {
+		return err
+	}
+	printResponse(statusCode, body)
+	if statusCode >= http.StatusBadRequest {
+		return fmt.Errorf("mock payment failed failed with status %d", statusCode)
 	}
 
 	return nil

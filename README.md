@@ -1,4 +1,4 @@
-# go-order-service
+﻿# go-order-service
 
 一个使用 Go + Gin 实现的电商订单后端服务。
 
@@ -38,7 +38,7 @@
 - [x] 统一错误响应
 - [x] 请求日志中间件
 - [x] `X-Request-ID`
-- [ ] 支付状态流转
+- [x] 支付状态流转
 
 ## 启动方式
 
@@ -106,6 +106,8 @@ go run ./cmd/apitest login JulieJaps 112233
 go run ./cmd/apitest me
 go run ./cmd/apitest orders
 go run ./cmd/apitest orders 1 2
+go run ./cmd/apitest payments
+go run ./cmd/apitest payments 1 2
 ```
 
 说明：
@@ -113,6 +115,7 @@ go run ./cmd/apitest orders 1 2
 - `.night-hawk-token` 已加入 `.gitignore`，不要提交
 - `me` 会自动读取 `.night-hawk-token` 并访问受保护接口 `/api/v1/users/me`
 - `orders` 会自动读取 `.night-hawk-token` 并访问受保护接口 `/api/v1/orders`
+- `payments` 会自动读取 `.night-hawk-token` 并访问受保护接口 `/api/v1/payments/mock`
 - `db` 用于验证数据库连接，不需要 JWT token
 - `redis` 用于验证 Redis 连接，不需要 JWT token
 
@@ -130,3 +133,12 @@ go run ./cmd/apitest orders 1 2
 - 重复请求不会再次扣减库存，也不会重复写入 `orders` 和 `order_items`
 
 更多接口细节请看 [docs/api.md](docs/api.md)。
+
+## 支付状态流转
+
+当前项目已支持模拟支付状态流转：
+- 订单创建后状态为 `PENDING_PAYMENT`
+- `POST /api/v1/payments/mock` 携带 `result=SUCCESS` 时，订单状态变为 `PAID`，并写入 `payments`
+- `POST /api/v1/payments/mock` 携带 `result=FAILED` 时，订单状态变为 `PAYMENT_FAILED`，并恢复本次订单扣减的库存
+- 同一订单重复支付会返回 `409`
+- 支付接口需要 JWT 鉴权
