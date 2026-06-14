@@ -211,7 +211,7 @@ func usernamePassword(args []string) (string, string, error) {
 
 func orderArgs(args []string) (int64, int64, error) {
 	if len(args) == 1 {
-		return 1, 2, nil
+		return 4, 1, nil
 	}
 	if len(args) != 3 {
 		return 0, 0, fmt.Errorf("usage: %s [product_id quantity]", args[0])
