@@ -483,7 +483,9 @@ go run ./cmd/apitest orders 1 2
 - `cmd/apitest db` 用于检查数据库连接
 - `cmd/apitest redis` 用于检查 Redis 连接
 - `cmd/apitest products` 用于检查商品列表
-- `cmd/apitest register/login/me` 用于检查用户注册、登录和 JWT 鉴权
+- `cmd/apitest register` 用于检查用户注册
+- `cmd/apitest login` 用于检查用户登录并保存 JWT token
+- `cmd/apitest me` 用于检查 JWT 鉴权后的当前用户接口
 - `cmd/apitest orders` 用于检查订单创建、Redis 幂等和库存扣减事务
 - `cmd/apitest orders` 会依次验证 `400 / 401 / 200 / 409`
 - `cmd/apitest orders` 每次最多成功创建 1 个订单，重复请求会返回 `409`

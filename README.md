@@ -119,6 +119,36 @@ go run ./cmd/apitest payments 1 2
 - `db` 用于验证数据库连接，不需要 JWT token
 - `redis` 用于验证 Redis 连接，不需要 JWT token
 
+## 测试
+
+运行全部单元测试：
+
+```powershell
+go test ./...
+```
+
+当前测试覆盖：
+
+- 统一响应结构 `response.Success / response.SuccessWithStatus / response.Error`
+- JWT token 生成与解析
+- JWT `AuthMiddleware` 鉴权行为
+- 请求日志中间件和 `X-Request-ID`
+- Redis `Idempotency-Key` 首次请求、重复请求、成功标记、失败释放、用户隔离
+
+## 接口回归验证
+
+```powershell
+go run ./cmd/apitest health
+go run ./cmd/apitest db
+go run ./cmd/apitest redis
+go run ./cmd/apitest products
+go run ./cmd/apitest register JulieJaps 112233
+go run ./cmd/apitest login JulieJaps 112233
+go run ./cmd/apitest me
+go run ./cmd/apitest orders
+go run ./cmd/apitest payments
+```
+
 ## 订单创建
 
 订单创建接口已经迁移到 MySQL，并接入 Redis 幂等 key。
