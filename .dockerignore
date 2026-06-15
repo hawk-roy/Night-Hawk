@@ -1,0 +1,14 @@
+.git
+.gitignore
+.idea
+.vscode
+.env
+.night-hawk-token
+tmp
+*.log
+*.tmp
+bin
+dist
+coverage.out
+Dockerfile
+docker-compose.override.yml

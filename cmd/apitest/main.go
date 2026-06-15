@@ -23,7 +23,7 @@ type apiResponse struct {
 }
 
 func main() {
-	baseURL := flag.String("base", "http://localhost:8500", "API base URL")
+	baseURL := flag.String("base", "", "API base URL")
 	tokenFile := flag.String("token-file", ".night-hawk-token", "path to saved JWT token")
 	token := flag.String("token", "", "JWT token override")
 	flag.Parse()
@@ -34,53 +34,59 @@ func main() {
 		os.Exit(1)
 	}
 
+	resolvedBaseURL, err := resolveBaseURL(*baseURL)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "error:", err)
+		os.Exit(1)
+	}
+
 	client := &http.Client{Timeout: 10 * time.Second}
 	cmd := args[0]
 
-	var err error
+	var requestErr error
 	switch cmd {
 	case "health":
-		err = request(client, http.MethodGet, *baseURL+"/api/v1/health", "", nil, false)
+		requestErr = request(client, http.MethodGet, resolvedBaseURL+"/api/v1/health", "", nil, false)
 	case "products":
-		err = request(client, http.MethodGet, *baseURL+"/api/v1/products", "", nil, true)
+		requestErr = request(client, http.MethodGet, resolvedBaseURL+"/api/v1/products", "", nil, true)
 	case "register":
 		username, password, parseErr := usernamePassword(args)
 		if parseErr != nil {
-			err = parseErr
+			requestErr = parseErr
 			break
 		}
-		err = requestJSON(client, http.MethodPost, *baseURL+"/api/v1/users/register", "", map[string]string{
+		requestErr = requestJSON(client, http.MethodPost, resolvedBaseURL+"/api/v1/users/register", "", map[string]string{
 			"username": username,
 			"password": password,
 		}, false)
 	case "login":
 		username, password, parseErr := usernamePassword(args)
 		if parseErr != nil {
-			err = parseErr
+			requestErr = parseErr
 			break
 		}
-		err = login(client, *baseURL, *tokenFile, username, password)
+		requestErr = login(client, resolvedBaseURL, *tokenFile, username, password)
 	case "me":
 		authToken := strings.TrimSpace(*token)
 		if authToken == "" {
-			authToken, err = readToken(*tokenFile)
-			if err != nil {
+			authToken, requestErr = readToken(*tokenFile)
+			if requestErr != nil {
 				break
 			}
 		}
-		err = request(client, http.MethodGet, *baseURL+"/api/v1/users/me", authToken, nil, false)
+		requestErr = request(client, http.MethodGet, resolvedBaseURL+"/api/v1/users/me", authToken, nil, false)
 	case "orders":
 		authToken := strings.TrimSpace(*token)
 		if authToken == "" {
-			authToken, err = readToken(*tokenFile)
-			if err != nil {
+			authToken, requestErr = readToken(*tokenFile)
+			if requestErr != nil {
 				break
 			}
 		}
 
 		productID, quantity, parseErr := orderArgs(args)
 		if parseErr != nil {
-			err = parseErr
+			requestErr = parseErr
 			break
 		}
 
@@ -91,77 +97,77 @@ func main() {
 		}
 
 		fmt.Println("1) missing Idempotency-Key")
-		err = requestJSONWithHeaders(
+		requestErr = requestJSONWithHeaders(
 			client,
 			http.MethodPost,
-			*baseURL+"/api/v1/orders",
+			resolvedBaseURL+"/api/v1/orders",
 			authToken,
 			nil,
 			body,
 			false,
 		)
-		if err != nil {
+		if requestErr != nil {
 			break
 		}
 
 		fmt.Println("2) missing token")
-		err = requestJSONWithHeaders(
+		requestErr = requestJSONWithHeaders(
 			client,
 			http.MethodPost,
-			*baseURL+"/api/v1/orders",
+			resolvedBaseURL+"/api/v1/orders",
 			"",
 			map[string]string{"Idempotency-Key": idempotencyKey + "-no-token"},
 			body,
 			false,
 		)
-		if err != nil {
+		if requestErr != nil {
 			break
 		}
 
 		fmt.Println("3) create order with idempotency key")
-		err = requestJSONWithHeaders(
+		requestErr = requestJSONWithHeaders(
 			client,
 			http.MethodPost,
-			*baseURL+"/api/v1/orders",
+			resolvedBaseURL+"/api/v1/orders",
 			authToken,
 			map[string]string{"Idempotency-Key": idempotencyKey},
 			body,
 			false,
 		)
-		if err != nil {
+		if requestErr != nil {
 			break
 		}
 
 		fmt.Println("4) duplicate request with same idempotency key")
-		err = requestJSONWithHeaders(
+		requestErr = requestJSONWithHeaders(
 			client,
 			http.MethodPost,
-			*baseURL+"/api/v1/orders",
+			resolvedBaseURL+"/api/v1/orders",
 			authToken,
 			map[string]string{"Idempotency-Key": idempotencyKey},
 			body,
 			false,
 		)
 	case "db":
-		err = request(client, http.MethodGet, *baseURL+"/api/v1/health/db", "", nil, false)
+		requestErr = request(client, http.MethodGet, resolvedBaseURL+"/api/v1/health/db", "", nil, false)
 	case "me-wrong":
-		err = request(client, http.MethodGet, *baseURL+"/api/v1/users/me", "wrong-token", nil, false)
+		requestErr = request(client, http.MethodGet, resolvedBaseURL+"/api/v1/users/me", "wrong-token", nil, false)
 	case "token":
 		var saved string
-		saved, err = readToken(*tokenFile)
-		if err == nil {
+		saved, requestErr = readToken(*tokenFile)
+		if requestErr == nil {
 			fmt.Println(saved)
 		}
 	case "redis":
-		err = request(client, http.MethodGet, *baseURL+"/api/v1/health/redis", "", nil, false)
+		requestErr = request(client, http.MethodGet, resolvedBaseURL+"/api/v1/health/redis", "", nil, false)
 	case "payments":
-		err = payments(client, *baseURL, *tokenFile, *token, args)
+		requestErr = payments(client, resolvedBaseURL, *tokenFile, *token, args)
 	default:
-		err = fmt.Errorf("unknown command: %s", cmd)
+		requestErr = fmt.Errorf("unknown command: %s", cmd)
 	}
 
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "error:", err)
+	if requestErr != nil {
+		fmt.Fprintln(os.Stderr, "error:", requestErr)
 		os.Exit(1)
 	}
 }
@@ -184,7 +190,7 @@ Usage:
 
 
 Options:
-  -base       API base URL, default http://localhost:8500
+  -base       API base URL (optional, otherwise auto-detects localhost:8080 then localhost:8500)
   -token      JWT token override for protected commands
   -token-file saved token path, default .night-hawk-token
 
@@ -199,6 +205,40 @@ Example:
 	go run ./cmd/apitest payments
 	go run ./cmd/apitest payments 1 2
 	go run ./cmd/apitest redis`)
+}
+
+func resolveBaseURL(explicit string) (string, error) {
+	explicit = strings.TrimRight(strings.TrimSpace(explicit), "/")
+	if explicit != "" {
+		return explicit, nil
+	}
+
+	if envBaseURL := strings.TrimRight(strings.TrimSpace(os.Getenv("APITEST_BASE_URL")), "/"); envBaseURL != "" {
+		return envBaseURL, nil
+	}
+
+	candidates := []string{
+		"http://localhost:8080",
+		"http://localhost:8500",
+	}
+
+	probeClient := &http.Client{Timeout: 800 * time.Millisecond}
+	for _, candidate := range candidates {
+		req, err := http.NewRequest(http.MethodGet, candidate+"/api/v1/health", nil)
+		if err != nil {
+			continue
+		}
+
+		resp, err := probeClient.Do(req)
+		if err != nil {
+			continue
+		}
+		io.Copy(io.Discard, resp.Body)
+		resp.Body.Close()
+		return candidate, nil
+	}
+
+	return candidates[0], nil
 }
 
 func usernamePassword(args []string) (string, string, error) {

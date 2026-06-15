@@ -46,6 +46,67 @@
 go run ./cmd/server
 ```
 
+## Docker Compose 一键启动
+
+启动 MySQL、Redis 和 Go 服务：
+
+```powershell
+docker compose up -d --build
+```
+
+查看容器：
+
+```powershell
+docker ps
+```
+
+期望看到：
+
+```txt
+go-order-service-mysql
+go-order-service-redis
+go-order-service-app
+```
+
+验证服务：
+
+```powershell
+curl.exe http://localhost:8080/api/v1/health
+curl.exe http://localhost:8080/api/v1/health/db
+curl.exe http://localhost:8080/api/v1/health/redis
+curl.exe http://localhost:8080/api/v1/products
+```
+
+查看 app 日志：
+
+```powershell
+docker compose logs app
+```
+
+停止服务：
+
+```powershell
+docker compose down
+```
+
+注意：不要随便执行 `docker compose down -v`，它会删除 MySQL 数据卷。
+
+### 容器内连接地址
+
+Go app 容器中连接 MySQL 使用：
+
+```txt
+MYSQL_HOST=mysql
+```
+
+连接 Redis 使用：
+
+```txt
+REDIS_ADDR=redis:6379
+```
+
+不要在 app 容器中使用 `127.0.0.1` 连接 MySQL 或 Redis，因为容器内的 `127.0.0.1` 指向 app 容器自身。
+
 ## 本地 MySQL 开发环境
 
 ### 1. 准备环境变量
@@ -108,6 +169,13 @@ go run ./cmd/apitest orders
 go run ./cmd/apitest orders 1 2
 go run ./cmd/apitest payments
 go run ./cmd/apitest payments 1 2
+```
+
+`cmd/apitest` 会优先自动连接 `http://localhost:8080`，如果没找到再回退到 `http://localhost:8500`。如果你想手动指定地址，可以加 `-base`，例如：
+
+```powershell
+go run ./cmd/apitest -base http://localhost:8500 health
+go run ./cmd/apitest -base http://localhost:8080 health
 ```
 
 说明：
