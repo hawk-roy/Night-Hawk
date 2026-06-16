@@ -17,7 +17,7 @@
 - `data` 是业务数据，失败时通常为 `null`
 - 当前实现里，常见错误码会直接沿用 HTTP 状态码语义，例如 `400 / 401 / 404 / 409 / 500`
 
-说明：下面的 `curl` 示例以本地 `go run` 的 `http://localhost:8500` 为例；如果你是通过 Docker Compose 启动服务，则可以改用宿主机 `http://localhost:8080` 访问同样的接口。
+说明：下面的 `curl` 示例以本地 `go run` 的 `http://localhost:8500` 为例；如果你是通过 Docker Compose 启动服务，则当前也使用宿主机 `http://localhost:8500` 访问同样的接口。
 
 ## 通用响应头
 

@@ -1,6 +1,40 @@
 ﻿# go-order-service
 
-一个使用 Go + Gin 实现的电商订单后端服务。
+一个使用 Go + Gin 实现的订单后端服务，模拟电商核心链路，覆盖用户认证、商品查询、订单创建、库存扣减、Redis 幂等、支付状态流转、统一响应、请求日志和 Docker Compose 一键启动。
+
+## 项目亮点
+
+- JWT 用户认证：注册、登录、受保护接口访问
+- MySQL 持久化：用户、商品、库存、订单、支付流水落库
+- 订单库存事务：创建订单时使用 MySQL 事务和 `SELECT ... FOR UPDATE` 扣减库存
+- Redis 幂等 key：使用 `Idempotency-Key` 防止重复下单
+- 支付状态流转：支持 `PENDING_PAYMENT -> PAID / PAYMENT_FAILED`
+- 统一响应结构：所有接口统一返回 `code/message/data`
+- 请求日志：支持 `X-Request-ID`，记录 `method/path/status/latency/client_ip`
+- Docker Compose：一键启动 MySQL、Redis 和 Go 服务
+- 单元测试：覆盖 response、JWT、AuthMiddleware、RequestLogger、Redis 幂等逻辑
+
+## 技术栈
+
+- Go
+- Gin
+- MySQL 8.0
+- Redis 7
+- JWT
+- Docker Compose
+- `database/sql`
+- `go-redis/v9`
+- `miniredis`
+
+## 架构设计
+
+详见：[系统架构说明](docs/architecture.md)
+
+其中包括：
+
+- 系统架构图
+- 订单创建流程图
+- 支付状态流转图
 
 ## 当前进度
 
@@ -71,10 +105,16 @@ go-order-service-app
 验证服务：
 
 ```powershell
-curl.exe http://localhost:8080/api/v1/health
-curl.exe http://localhost:8080/api/v1/health/db
-curl.exe http://localhost:8080/api/v1/health/redis
-curl.exe http://localhost:8080/api/v1/products
+curl.exe http://localhost:8500/api/v1/health
+curl.exe http://localhost:8500/api/v1/health/db
+curl.exe http://localhost:8500/api/v1/health/redis
+curl.exe http://localhost:8500/api/v1/products
+```
+
+Docker Compose 模式访问地址：
+
+```txt
+http://localhost:8500
 ```
 
 查看 app 日志：
@@ -171,11 +211,10 @@ go run ./cmd/apitest payments
 go run ./cmd/apitest payments 1 2
 ```
 
-`cmd/apitest` 会优先自动连接 `http://localhost:8080`，如果没找到再回退到 `http://localhost:8500`。如果你想手动指定地址，可以加 `-base`，例如：
+`cmd/apitest` 会自动尝试 `http://localhost:8080` 和 `http://localhost:8500`。如果你想手动指定地址，可以加 `-base`，例如：
 
 ```powershell
 go run ./cmd/apitest -base http://localhost:8500 health
-go run ./cmd/apitest -base http://localhost:8080 health
 ```
 
 说明：
@@ -186,6 +225,18 @@ go run ./cmd/apitest -base http://localhost:8080 health
 - `payments` 会自动读取 `.night-hawk-token` 并访问受保护接口 `/api/v1/payments/mock`
 - `db` 用于验证数据库连接，不需要 JWT token
 - `redis` 用于验证 Redis 连接，不需要 JWT token
+
+## 核心接口
+
+- `GET /api/v1/health`
+- `GET /api/v1/health/db`
+- `GET /api/v1/health/redis`
+- `POST /api/v1/users/register`
+- `POST /api/v1/users/login`
+- `GET /api/v1/users/me`
+- `GET /api/v1/products`
+- `POST /api/v1/orders`
+- `POST /api/v1/payments/mock`
 
 ## 测试
 
@@ -240,3 +291,11 @@ go run ./cmd/apitest payments
 - `POST /api/v1/payments/mock` 携带 `result=FAILED` 时，订单状态变为 `PAYMENT_FAILED`，并恢复本次订单扣减的库存
 - 同一订单重复支付会返回 `409`
 - 支付接口需要 JWT 鉴权
+
+## 当前边界
+
+- 当前支付为模拟支付，不接入真实第三方支付
+- 当前订单创建只支持单商品下单
+- 当前重复 Idempotency-Key 返回 `409`，不返回第一次请求的完整响应
+- 当前尚未接入消息队列
+- 当前尚未做压测和 pprof 性能分析
