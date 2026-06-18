@@ -105,16 +105,16 @@ go-order-service-app
 验证服务：
 
 ```powershell
-curl.exe http://localhost:8500/api/v1/health
-curl.exe http://localhost:8500/api/v1/health/db
-curl.exe http://localhost:8500/api/v1/health/redis
-curl.exe http://localhost:8500/api/v1/products
+curl.exe http://localhost:9000/api/v1/health
+curl.exe http://localhost:9000/api/v1/health/db
+curl.exe http://localhost:9000/api/v1/health/redis
+curl.exe http://localhost:9000/api/v1/products
 ```
 
 Docker Compose 模式访问地址：
 
 ```txt
-http://localhost:8500
+http://localhost:9000
 ```
 
 查看 app 日志：
@@ -177,7 +177,7 @@ docker exec -it go-order-service-mysql mysql -uroot -prootpass -e "USE go_order_
 
 ```powershell
 go run ./cmd/server
-curl.exe http://localhost:8500/api/v1/health/db
+curl.exe http://localhost:9000/api/v1/health/db
 ```
 
 ## 启动 Redis
@@ -211,10 +211,10 @@ go run ./cmd/apitest payments
 go run ./cmd/apitest payments 1 2
 ```
 
-`cmd/apitest` 会自动尝试 `http://localhost:8080` 和 `http://localhost:8500`。如果你想手动指定地址，可以加 `-base`，例如：
+`cmd/apitest` 会自动尝试 `http://localhost:8080` 和 `http://localhost:9000`。如果你想手动指定地址，可以加 `-base`，例如：
 
 ```powershell
-go run ./cmd/apitest -base http://localhost:8500 health
+go run ./cmd/apitest -base http://localhost:9000 health
 ```
 
 说明：

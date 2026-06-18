@@ -190,7 +190,7 @@ Usage:
 
 
 Options:
-  -base       API base URL (optional, otherwise auto-detects localhost:8080 then localhost:8500)
+  -base       API base URL (optional, otherwise auto-detects localhost:8080 then localhost:9000)
   -token      JWT token override for protected commands
   -token-file saved token path, default .night-hawk-token
 
@@ -219,7 +219,7 @@ func resolveBaseURL(explicit string) (string, error) {
 
 	candidates := []string{
 		"http://localhost:8080",
-		"http://localhost:8500",
+		"http://localhost:9000",
 	}
 
 	probeClient := &http.Client{Timeout: 800 * time.Millisecond}

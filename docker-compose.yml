@@ -39,7 +39,7 @@ services:
       dockerfile: Dockerfile
     container_name: go-order-service-app
     ports:
-      - "8500:8500"
+      - "9500:9000"
     environment:
       MYSQL_HOST: mysql
       MYSQL_PORT: 3306

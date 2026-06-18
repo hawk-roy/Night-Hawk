@@ -17,7 +17,7 @@ RUN adduser -D -g '' appuser
 
 COPY --from=builder /app/go-order-service /app/go-order-service
 
-EXPOSE 8500
+EXPOSE 9000
 
 USER appuser
 

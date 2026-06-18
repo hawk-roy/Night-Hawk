@@ -30,8 +30,8 @@ func main() {
 
 	r := router.NewRouter(mysqlDB, redisClient)
 
-	log.Println("go-order-service is running on :8500")
-	if err := r.Run(":8500"); err != nil {
+	log.Println("go-order-service is running on :9000")
+	if err := r.Run(":9000"); err != nil {
 		log.Fatal(err)
 	}
 	log.Println("Done")

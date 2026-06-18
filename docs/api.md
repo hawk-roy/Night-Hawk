@@ -17,7 +17,7 @@
 - `data` 是业务数据，失败时通常为 `null`
 - 当前实现里，常见错误码会直接沿用 HTTP 状态码语义，例如 `400 / 401 / 404 / 409 / 500`
 
-说明：下面的 `curl` 示例以本地 `go run` 的 `http://localhost:8500` 为例；如果你是通过 Docker Compose 启动服务，则当前也使用宿主机 `http://localhost:8500` 访问同样的接口。
+说明：下面的 `curl` 示例以本地 `go run` 的 `http://localhost:9000` 为例；如果你是通过 Docker Compose 启动服务，则当前也使用宿主机 `http://localhost:9000` 访问同样的接口。
 
 ## 通用响应头
 
@@ -56,7 +56,7 @@ X-Request-ID: test-request-0611-001
 #### curl
 
 ```powershell
-curl.exe http://localhost:8500/api/v1/health
+curl.exe http://localhost:9000/api/v1/health
 ```
 
 ---
@@ -93,7 +93,7 @@ curl.exe http://localhost:8500/api/v1/health
 #### curl
 
 ```powershell
-curl.exe http://localhost:8500/api/v1/health/db
+curl.exe http://localhost:9000/api/v1/health/db
 ```
 
 ---
@@ -130,7 +130,7 @@ curl.exe http://localhost:8500/api/v1/health/db
 #### curl
 
 ```powershell
-curl.exe http://localhost:8500/api/v1/health/redis
+curl.exe http://localhost:9000/api/v1/health/redis
 ```
 
 ---
@@ -190,7 +190,7 @@ curl.exe http://localhost:8500/api/v1/health/redis
 #### curl
 
 ```powershell
-curl.exe -X POST http://localhost:8500/api/v1/users/register `
+curl.exe -X POST http://localhost:9000/api/v1/users/register `
   -H "Content-Type: application/json" `
   -d '{"username":"testuser","password":"123456"}'
 ```
@@ -243,7 +243,7 @@ curl.exe -X POST http://localhost:8500/api/v1/users/register `
 #### curl
 
 ```powershell
-curl.exe -X POST http://localhost:8500/api/v1/users/login `
+curl.exe -X POST http://localhost:9000/api/v1/users/login `
   -H "Content-Type: application/json" `
   -d '{"username":"testuser","password":"123456"}'
 ```
@@ -288,7 +288,7 @@ Authorization: Bearer xxxxx.yyyyy.zzzzz
 #### curl
 
 ```powershell
-curl.exe -H "Authorization: Bearer xxxxx.yyyyy.zzzzz" http://localhost:8500/api/v1/users/me
+curl.exe -H "Authorization: Bearer xxxxx.yyyyy.zzzzz" http://localhost:9000/api/v1/users/me
 ```
 
 ---
@@ -320,7 +320,7 @@ curl.exe -H "Authorization: Bearer xxxxx.yyyyy.zzzzz" http://localhost:8500/api/
 #### curl
 
 ```powershell
-curl.exe http://localhost:8500/api/v1/products
+curl.exe http://localhost:9000/api/v1/products
 ```
 
 ---
@@ -448,7 +448,7 @@ Idempotency-Key: <unique-request-key>
 #### curl
 
 ```powershell
-curl.exe -X POST http://localhost:8500/api/v1/orders `
+curl.exe -X POST http://localhost:9000/api/v1/orders `
   -H "Content-Type: application/json" `
   -H "Authorization: Bearer xxxxx.yyyyy.zzzzz" `
   -H "Idempotency-Key: order-test-0610-001" `
@@ -601,7 +601,7 @@ Content-Type: application/json
 #### curl
 
 ```powershell
-curl.exe -X POST http://localhost:8500/api/v1/payments/mock `
+curl.exe -X POST http://localhost:9000/api/v1/payments/mock `
   -H "Content-Type: application/json" `
   -H "Authorization: Bearer xxxxx.yyyyy.zzzzz" `
   -d '{"order_id":1,"result":"SUCCESS"}'
