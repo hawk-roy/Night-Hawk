@@ -613,3 +613,32 @@ curl.exe -X POST http://localhost:9000/api/v1/payments/mock `
 go run ./cmd/apitest payments
 go run ./cmd/apitest payments 1 2
 ```
+
+---
+
+## 仓储集成测试说明
+
+Repository 层的 MySQL 集成测试默认不运行，避免 `go test ./...` 依赖真实数据库。
+
+如果需要手动执行，请先启动本地 MySQL：
+
+```powershell
+docker compose up -d mysql
+```
+
+然后设置环境变量并运行：
+
+```powershell
+$env:RUN_INTEGRATION_TESTS="1"
+go test ./internal/repository -v
+Remove-Item Env:RUN_INTEGRATION_TESTS
+```
+
+当前仓储集成测试主要验证：
+
+- `OrderRepository` 创建订单事务
+- `inventory.stock` 在创建订单时正确扣减
+- 库存不足时事务回滚，不写入 `orders` 和 `order_items`
+- `PaymentRepository` 支付成功状态流转
+- `PaymentRepository` 重复支付校验
+- `PaymentRepository` 支付失败后的库存回补

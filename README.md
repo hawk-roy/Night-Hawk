@@ -13,6 +13,7 @@
 - 请求日志：支持 `X-Request-ID`，记录 `method/path/status/latency/client_ip`
 - Docker Compose：一键启动 MySQL、Redis 和 Go 服务
 - 单元测试：覆盖 response、JWT、AuthMiddleware、RequestLogger、Redis 幂等逻辑
+- MySQL 仓储集成测试：覆盖订单创建事务和支付状态流转事务
 
 ## 技术栈
 
@@ -240,7 +241,7 @@ go run ./cmd/apitest -base http://localhost:9000 health
 
 ## 测试
 
-运行全部单元测试：
+默认测试不依赖 MySQL / Redis 外部服务：
 
 ```powershell
 go test ./...
@@ -253,6 +254,33 @@ go test ./...
 - JWT `AuthMiddleware` 鉴权行为
 - 请求日志中间件和 `X-Request-ID`
 - Redis `Idempotency-Key` 首次请求、重复请求、成功标记、失败释放、用户隔离
+- MySQL 仓储集成测试，默认跳过
+
+### MySQL 集成测试
+
+Repository 集成测试会连接真实 MySQL，默认不运行。  
+需要先启动 MySQL：
+
+```powershell
+docker compose up -d mysql
+```
+
+然后执行：
+
+```powershell
+$env:RUN_INTEGRATION_TESTS="1"
+go test ./internal/repository -v
+Remove-Item Env:RUN_INTEGRATION_TESTS
+```
+
+当前集成测试覆盖：
+
+- OrderRepository 创建订单事务
+- 创建订单时 `inventory.stock` 扣减
+- 库存不足时事务回滚，不写 `orders` / `order_items`
+- PaymentRepository 支付成功状态流转
+- PaymentRepository 重复支付校验
+- PaymentRepository 支付失败库存回补
 
 ## 接口回归验证
 
