@@ -642,3 +642,19 @@ Remove-Item Env:RUN_INTEGRATION_TESTS
 - `PaymentRepository` 支付成功状态流转
 - `PaymentRepository` 重复支付校验
 - `PaymentRepository` 支付失败后的库存回补
+
+## CI
+
+项目已接入 GitHub Actions。
+
+每次 push 或 pull request 会自动执行：
+
+- 单元测试：`go test ./...`
+- 仓储集成测试：`RUN_INTEGRATION_TESTS=1 go test ./internal/repository -v`
+
+CI 中会启动 MySQL 8.0 service，并显式执行：
+
+- `docs/db/schema.sql`
+- `docs/db/seed.sql`
+
+这意味着线上 CI 和本地测试命令保持一致，但不会依赖你本机的 MySQL 或 Redis。

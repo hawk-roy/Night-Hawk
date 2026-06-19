@@ -282,6 +282,29 @@ Remove-Item Env:RUN_INTEGRATION_TESTS
 - PaymentRepository 重复支付校验
 - PaymentRepository 支付失败库存回补
 
+## CI
+
+项目已接入 GitHub Actions。
+
+每次 push 或 pull request 会自动执行：
+
+- Go 单元测试：`go test ./...`
+- MySQL repository 集成测试：`RUN_INTEGRATION_TESTS=1 go test ./internal/repository -v`
+
+CI 中会启动 MySQL 8.0 service，并执行：
+
+- `docs/db/schema.sql`
+- `docs/db/seed.sql`
+
+集成测试覆盖：
+
+- OrderRepository 创建订单事务
+- 库存扣减
+- 库存不足回滚
+- PaymentRepository 支付成功状态流转
+- 重复支付拦截
+- 支付失败库存回补
+
 ## 接口回归验证
 
 ```powershell
