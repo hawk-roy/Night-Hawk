@@ -1,6 +1,34 @@
 ﻿# go-order-service
 
-一个使用 Go + Gin 实现的订单后端服务，模拟电商核心链路，覆盖用户认证、商品查询、订单创建、库存扣减、Redis 幂等、支付状态流转、统一响应、请求日志和 Docker Compose 一键启动。
+一个使用 Go + Gin 实现的订单后端服务，模拟电商订单核心链路，覆盖用户认证、商品查询、订单创建、库存扣减、Redis 幂等、支付状态流转、统一响应、请求日志、Docker Compose 和自动化测试。
+
+## 项目定位
+
+本项目不是普通 CRUD Demo，而是围绕订单系统里的真实后端问题做设计：
+
+- 如何保证下单时库存扣减、订单写入和订单明细写入的一致性
+- 如何防止用户重复点击或网络重试导致重复下单
+- 如何设计订单支付状态流转
+- 如何通过日志、测试、Docker 和 CI 提升项目可维护性
+
+## 核心能力
+
+| 能力 | 项目体现 |
+|---|---|
+| 用户认证 | 注册、登录、JWT 鉴权、受保护接口 |
+| 数据持久化 | MySQL 存储 users/products/inventory/orders/order_items/payments |
+| 事务一致性 | 创建订单时使用事务扣减库存、写入订单和订单明细 |
+| 防重复提交 | Redis `Idempotency-Key` 防止重复下单 |
+| 状态流转 | 支持 `PENDING_PAYMENT -> PAID / PAYMENT_FAILED` |
+| 可观测性 | `RequestLogger` + `X-Request-ID` 记录请求链路 |
+| 工程化交付 | Docker Compose 一键启动 MySQL、Redis 和 Go 服务 |
+| 自动化测试 | 单元测试 + MySQL 集成测试 |
+| CI 质量门禁 | GitHub Actions 自动执行单元测试和集成测试 |
+
+## 求职材料
+
+- [简历项目描述](docs/resume.md)
+- [面试讲解稿](docs/interview-script.md)
 
 ## 项目亮点
 
