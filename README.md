@@ -15,7 +15,7 @@
 
 | 能力 | 项目体现 |
 |---|---|
-| 用户认证 | 注册、登录、JWT 鉴权、受保护接口 |
+| 用户认证 | 注册、登录、JWT 鉴权中间件、受保护接口 |
 | 数据持久化 | MySQL 存储 users/products/inventory/orders/order_items/payments |
 | 事务一致性 | 创建订单时使用事务扣减库存、写入订单和订单明细 |
 | 防重复提交 | Redis `Idempotency-Key` 防止重复下单 |
@@ -32,7 +32,7 @@
 
 ## 项目亮点
 
-- JWT 用户认证：注册、登录、受保护接口访问
+- JWT 用户认证：注册、登录、JWT 鉴权中间件、受保护接口访问
 - MySQL 持久化：用户、商品、库存、订单、支付流水落库
 - 订单库存事务：创建订单时使用 MySQL 事务和 `SELECT ... FOR UPDATE` 扣减库存
 - Redis 幂等 key：使用 `Idempotency-Key` 防止重复下单
