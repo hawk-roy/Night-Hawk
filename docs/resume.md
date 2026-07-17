@@ -4,7 +4,7 @@
 
 **go-order-service | Go 订单后端服务**
 
-基于 Go + Gin + MySQL + Redis 实现的模拟订单后端服务，覆盖用户注册登录、JWT 鉴权、商品查询、订单创建、库存扣减、Redis 幂等和模拟支付状态流转。
+基于 Go + Gin + MySQL + Redis 实现的模拟订单后端服务，覆盖用户注册登录、JWT 鉴权中间件、商品查询、订单创建、库存扣减、Redis 幂等和模拟支付状态流转。
 使用 MySQL 事务和 `SELECT ... FOR UPDATE` 保证下单时库存扣减、订单写入和订单明细写入的一致性。
 使用 Redis `Idempotency-Key` 防止重复下单，并通过 Docker Compose、单元测试、MySQL 集成测试和 GitHub Actions CI 提升项目可交付性。
 
