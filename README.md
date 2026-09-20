@@ -377,4 +377,3 @@ go run ./cmd/apitest payments
 - 当前订单创建只支持单商品下单
 - 当前重复 Idempotency-Key 返回 `409`，不返回第一次请求的完整响应
 - 当前尚未接入消息队列
-- 当前尚未做压测和 pprof 性能分析
