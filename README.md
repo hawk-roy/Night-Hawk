@@ -46,7 +46,7 @@
 ## 技术栈
 
 - Go
-- Gin    
+- Gin        
 - MySQL 8.0
 - Redis 7
 - JWT
